@@ -11,8 +11,8 @@ This repository contains a **Diabetes Prediction Model** built using machine lea
 - 🌐 **Streamlit Deployment**: A web-based app for easy access and usability.  
 
 ## 📈 Model Performance  
-- **Training Accuracy**: 🏆 **77.34%**  
-- **Test Accuracy**: 📊 **78.70%**  
+- **Training Accuracy**: 🏆 **91.84016%**  
+- **Test Accuracy**: 📊 **92.04372%**  
 
 ## 🛠 Installation & Running Locally  
 To run this project locally:  

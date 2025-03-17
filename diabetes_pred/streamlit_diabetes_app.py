@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
 import streamlit as st
 import numpy as np
+import pandas as pd
 import pickle
 import os
 
@@ -32,33 +32,68 @@ if not os.path.exists(scaler_path):
 
 with open(scaler_path, 'rb') as file:
     scaler = pickle.load(file)
+# ----------------------------------------------------
 
-# Streamlit UI
-st.title("Diabetes Prediction System")
-st.write("Enter your details below to check your diabetes risk.")
+#                               STREAMLIT UI
+st.title("Diabetes Prediction App")
+st.write("Enter your details below:")
 
-# User Inputs
-pregnancies = st.number_input("Pregnancies", min_value=0, max_value=20, value=1)
-glucose = st.number_input("Glucose Level", min_value=0, max_value=200, value=100)
-blood_pressure = st.number_input("Blood Pressure", min_value=0, max_value=150, value=80)
-skin_thickness = st.number_input("Skin Thickness", min_value=0, max_value=100, value=20)
-insulin = st.number_input("Insulin Level", min_value=0, max_value=900, value=30)
-bmi = st.number_input("BMI", min_value=0.0, max_value=70.0, value=25.0)
-dpf = st.number_input("Diabetes Pedigree Function", min_value=0.0, max_value=3.0, value=0.5)
-age = st.number_input("Age", min_value=1, max_value=120, value=25)
+# Input fields
+gender = st.selectbox("Gender", ["Male", "Female"])
+age = st.number_input("Age", min_value=1, max_value=120, value=30)
 
-# Predict Button
-if st.button("Predict Diabetes Risk"):
-    user_input = np.array([[pregnancies, glucose, blood_pressure, skin_thickness, insulin, bmi, dpf, age]])
+# Use friendly labels for hypertension and heart disease
+hypertension_input = st.selectbox("Hypertension", ["No", "Yes"])
+heart_disease_input = st.selectbox("Heart Disease", ["No", "Yes"])
 
-    # Scale the input using the loaded scaler
-    user_input_scaled = scaler.transform(user_input)
+smoking_history = st.selectbox("Smoking History", ["never", "current", "former", "No Info"])
+bmi = st.number_input("BMI", min_value=10.0, max_value=50.0, value=25.0)
+HbA1c_level = st.number_input("HbA1c Level", min_value=3.0, max_value=15.0, value=5.0)
+blood_glucose_level = st.number_input("Blood Glucose Level", min_value=50, max_value=300, value=100)
 
-    # Make prediction
-    prediction = model.predict(user_input_scaled)[0]
+# Convert user friendly inputs to numeric values:
+hypertension = 1 if hypertension_input == "Yes" else 0
+heart_disease = 1 if heart_disease_input == "Yes" else 0
 
-    # Display prediction
-    if prediction == 1:
-        st.markdown('<p style="color:red; font-size:20px;">You have a HIGH risk of diabetes.</p>', unsafe_allow_html=True)
+# Preprocess user input: create a DataFrame
+input_data = pd.DataFrame([[gender, age, hypertension, heart_disease, smoking_history, bmi, HbA1c_level, blood_glucose_level]],
+                          columns=['gender', 'age', 'hypertension', 'heart_disease', 'smoking_history', 'bmi', 'HbA1c_level', 'blood_glucose_level'])
+
+# Convert gender to binary: Male -> 1, Female -> 0
+input_data['gender'] = 1 if input_data['gender'].values[0] == "Male" else 0
+
+# One-hot encode 'smoking_history'; drop the first category to avoid multicollinearity.
+input_data = pd.get_dummies(input_data, columns=['smoking_history'], drop_first=True)
+
+# Ensure that all expected columns from the training data (x) are present
+for col in x.columns:
+    if col not in input_data.columns:
+        input_data[col] = 0
+
+# Reorder columns to match the training data
+input_data = input_data[x.columns]
+
+# Standardize the input using the pre-fitted scaler
+input_scaled = scaler.transform(input_data)
+
+# ML Model Prediction
+prediction = classifier.predict(input_scaled)
+
+# Mean Comparison Analysis:
+# Compare the absolute difference between the input and the group means for diabetic (1) and non-diabetic (0) groups.
+diabetes_mean_diff = np.abs(input_data.values - diabetes_means.loc[1].values)
+non_diabetes_mean_diff = np.abs(input_data.values - diabetes_means.loc[0].values)
+closer_to_diabetes = np.sum(diabetes_mean_diff) < np.sum(non_diabetes_mean_diff)
+
+# Display results when the "Predict" button is pressed.
+if st.button("Predict"):
+    if prediction[0] == 1:
+        st.error("⚠️⚠️The ML Model predicts you may have diabetes.⚠️⚠️")
     else:
-        st.markdown('<p style="color:green; font-size:20px;">You have a LOW risk of diabetes.</p>', unsafe_allow_html=True)
+        st.success("✅ The ML Model predicts you do not have diabetes.✅")
+
+    # Show mean comparison result
+    if closer_to_diabetes:
+        st.markdown('<p style="color:red; font-weight:bold; font-size:26px;">🔍 Your values are closer to the **diabetic group** based on feature averages.</p>', unsafe_allow_html=True)
+    else:
+        st.markdown('<p style="color:green; font-weight:bold; font-size:26px;">📊 Looks like u take care of urself.Your stats belong more to the non diabetic zone .</p>', unsafe_allow_html=True)
