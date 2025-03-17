@@ -5,12 +5,12 @@ import pickle
 import os
 
 # ------------------ DEBUG PRINTS ------------------
-st.write("Current working directory:", os.getcwd())
-st.write("Files in current working directory:", os.listdir(os.getcwd()))
+# st.write("Current working directory:", os.getcwd())
+# st.write("Files in current working directory:", os.listdir(os.getcwd()))
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-st.write("Script's BASE_DIR:", BASE_DIR)
-st.write("Files in BASE_DIR:", os.listdir(BASE_DIR))
+# st.write("Script's BASE_DIR:", BASE_DIR)
+# st.write("Files in BASE_DIR:", os.listdir(BASE_DIR))
 
 # ------------------ MODEL LOADING ------------------
 model_path = os.path.join(BASE_DIR, "model.pkl")
