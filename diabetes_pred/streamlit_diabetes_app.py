@@ -12,7 +12,7 @@ import numpy as np
 import pickle
 
 # Load the trained model
-model_path = "/content/model.pkl"
+model_path = "/model.pkl"
 with open(model_path, 'rb') as file:
     model = pickle.load(file)
 
