@@ -28,7 +28,7 @@ ML-Models-Repo/
 │   ├── requirements.txt
 │   ├── README.md
 │   ├── model_code.ipynb
-│── requirements.txt
+│   │── dataset.csv or dataset link
 │── README.md
 ## ✨ License
 This project is licensed under the **Apache License 2.0**. See the [LICENSE](LICENSE) file for details.
