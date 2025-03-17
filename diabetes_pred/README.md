@@ -11,8 +11,23 @@ Machine Learning Classification: The model classifies whether a person has diabe
 Streamlit Deployment: A web-based app for easy access and usability.
 
 ⚙️ Run
+# Diabetes Prediction System  
+## 🔗 Live Demo  
+🚀 Check out the live app: [Diabetes Prediction App](https://diabetesprediction1model.streamlit.app/)  
 
-To run the project, click on the attached link 
+## 📌 Features  
+- User-friendly interface built with **Streamlit**  
+- Predicts diabetes risk based on input parameters  
+- Uses a trained **ML model** for predictions  
+
+## 🛠 Installation & Running Locally  
+To run this project locally:  
+```bash
+git clone https://github.com/your-username/your-repo.git
+cd your-repo
+pip install -r requirements.txt
+streamlit run app.py
+
 
 🚀 Usage
 
