@@ -10,12 +10,28 @@ Original file is located at
 import streamlit as st
 import numpy as np
 import pickle
+import os
 
-# Load the trained model
-model_path = "model.pkl"
+# ------------------ DEBUG PRINTS ------------------
+print("Current working directory:", os.getcwd())
+print("Files in current working directory:", os.listdir(os.getcwd()))
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+print("Script's BASE_DIR:", BASE_DIR)
+print("Files in BASE_DIR:", os.listdir(BASE_DIR))
+
+# ------------------ MODEL LOADING ------------------
+# Build the path to model.pkl relative to BASE_DIR
+model_path = os.path.join(BASE_DIR, "model.pkl")
+print("Looking for model at:", model_path)
+
+if not os.path.exists(model_path):
+    raise FileNotFoundError(f"Error: Model file not found at {model_path}")
+
+##################################################################################
+# Load the model
 with open(model_path, 'rb') as file:
     model = pickle.load(file)
-
 # Streamlit UI
 st.title("Diabetes Prediction System")
 st.write("Enter your details below to check your diabetes risk.")
