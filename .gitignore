@@ -1,0 +1,67 @@
+# ==============================
+# Data and Models
+# ==============================
+data/               # Raw/processed datasets (use Git LFS if needed)
+datasets/
+*.csv
+*.h5
+*.npy
+*.npz
+*.parquet
+*.pth               # PyTorch model checkpoints
+*.ckpt              # Checkpoints (e.g., TensorFlow/Keras)
+*.joblib            # Scikit-learn saved models
+*.zip
+*.tar.gz
+
+# ==============================
+# Logs and Experiments
+# ==============================
+logs/               # Training logs
+mlruns/             # MLflow logs
+wandb/              # Weights & Biases logs
+.ipynb_checkpoints/ # Jupyter autosaves
+*.log
+
+# ==============================
+# Environments and Virtual Envs
+# ==============================
+venv/               # Virtual environments
+.venv/
+env/
+conda-env/
+*.env               # Environment variables (sensitive!)
+pip-selfcheck.json
+pyvenv.cfg
+
+# ==============================
+# Python and IDE Files
+# ==============================
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.pytest_cache/
+.coverage
+.ipynb_checkpoints/
+
+# IDE-specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ==============================
+# OS and Temporary Files
+# ==============================
+.DS_Store           # macOS
+Thumbs.db           # Windows
+*.tmp
+*.bak
+
+# ==============================
+# Git LFS (Large File Storage)
+# ==============================
+# If using Git LFS, track large files explicitly in .gitattributes
+# Example: 
+# *.pth filter=lfs diff=lfs merge=lfs -text
