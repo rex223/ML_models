@@ -26,11 +26,8 @@ st.title("Diabetes Prediction App")
 st.write("Enter your details below:")
 
 # --- CATEGORICAL INPUTS ---
-# For hypertension and heart disease, display "Yes" or "No".
 hypertension_ui = st.selectbox("Hypertension", ["Yes", "No"])
 heart_disease_ui = st.selectbox("Heart Disease", ["Yes", "No"])
-
-# Other categorical inputs.
 gender = st.selectbox("Select Gender", ["Male", "Female"])
 smoking_history_choice = st.selectbox("Smoking History", ["never", "current", "former", "No Info"])
 
@@ -41,12 +38,10 @@ HbA1c_level = st.number_input("HbA1c Level", min_value=3.0, max_value=15.0, valu
 blood_glucose_level = st.number_input("Blood Glucose Level", min_value=50, max_value=300, value=100)
 
 # Map UI values to those used in training.
-# (Assuming that training data stored "1" for Yes and "0" for No.)
 hypertension_val = "1" if hypertension_ui == "Yes" else "0"
 heart_disease_val = "1" if heart_disease_ui == "Yes" else "0"
 
 # ------------------ DATA PREPROCESSING ------------------
-# Create a DataFrame from the user inputs.
 input_dict = {
     "gender": [gender],
     "hypertension": [hypertension_val],
@@ -70,18 +65,17 @@ input_data["smoking_history"] = pd.Categorical(
 
 categorical_columns = ["gender", "hypertension", "heart_disease", "smoking_history"]
 
-# One-hot encode categorical features (using drop_first=True as in training).
+# One-hot encode categorical features.
 input_data_encoded = pd.get_dummies(input_data, columns=categorical_columns, drop_first=True)
 
-# Ensure alignment with the training features by adding any missing columns with zeros.
+# Ensure alignment with the training features.
 for col in training_features:
     if col not in input_data_encoded.columns:
         input_data_encoded[col] = 0
 
-# Reorder columns to exactly match the training feature order.
+# Reorder columns to match the training feature order.
 input_data_encoded = input_data_encoded[training_features]
 
-# NOTE: No additional normalization of HbA1c is applied, leaving the raw value.
 # Scale the input data using the saved scaler.
 input_scaled = scaler.transform(input_data_encoded)
 
@@ -94,10 +88,8 @@ if st.checkbox("Show Debug Info"):
 
 # ------------------ MODEL PREDICTION ------------------
 if st.button("Predict"):
-    # Use only model.predict since predict_proba isn't enabled.
     prediction = model.predict(input_scaled)
     
-    # Display a single result.
     if prediction[0] == 1:
         st.error("The ML Model predicts: DIABETIC")
     else:
