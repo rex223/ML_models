@@ -34,10 +34,13 @@ with open(means_path, 'rb') as file:
 st.title("Diabetes Prediction App")
 st.write("Enter your details below:")
 
-# Dropdown inputs for categorical options.
+# For hypertension and heart disease, we map UI-friendly options ("Yes"/"No")
+# to the values used during training ("1"/"0").
+hypertension_ui = st.selectbox("Hypertension", ["Yes", "No"])
+heart_disease_ui = st.selectbox("Heart Disease", ["Yes", "No"])
+
+# For the other categorical fields, we continue using their display values.
 gender = st.selectbox("Select Gender", ["Male", "Female"])
-hypertension_choice = st.selectbox("Hypertension", ["Yes", "No"])
-heart_disease_choice = st.selectbox("Heart Disease", ["Yes", "No"])
 smoking_history_choice = st.selectbox("Smoking History", ["never", "current", "former", "No Info"])
 
 # Other inputs.
@@ -46,12 +49,17 @@ bmi = st.number_input("BMI", min_value=10.0, max_value=50.0, value=25.0)
 HbA1c_level = st.number_input("HbA1c Level", min_value=3.0, max_value=15.0, value=5.0)
 blood_glucose_level = st.number_input("Blood Glucose Level", min_value=50, max_value=300, value=100)
 
+# Map the UI values for hypertension and heart disease to match training data.
+# (Assuming your training data used "1" for Yes and "0" for No.)
+hypertension_val = "1" if hypertension_ui == "Yes" else "0"
+heart_disease_val = "1" if heart_disease_ui == "Yes" else "0"
+
 # ------------------ DATA PREPROCESSING ------------------
 # Create DataFrame from user inputs.
 input_dict = {
     "gender": [gender],
-    "hypertension": [hypertension_choice],
-    "heart_disease": [heart_disease_choice],
+    "hypertension": [hypertension_val],
+    "heart_disease": [heart_disease_val],
     "smoking_history": [smoking_history_choice],
     "age": [age],
     "bmi": [bmi],
@@ -60,23 +68,28 @@ input_dict = {
 }
 input_data = pd.DataFrame(input_dict)
 
-# IMPORTANT: Convert the categorical columns to "Categorical" dtype with fixed categories.
-# This forces pd.get_dummies to output the same dummy structure as in training.
+# IMPORTANT: Convert categorical columns to fixed categories.
+# For hypertension and heart_disease, we now use categories "0" and "1" to match training.
+input_data["hypertension"] = pd.Categorical(input_data["hypertension"], categories=["0", "1"])
+input_data["heart_disease"] = pd.Categorical(input_data["heart_disease"], categories=["0", "1"])
+
+# For other categorical fields, set fixed categories if appropriate.
 input_data["gender"] = pd.Categorical(input_data["gender"], categories=["Female", "Male"])
-input_data["hypertension"] = pd.Categorical(input_data["hypertension"], categories=["No", "Yes"])
-input_data["heart_disease"] = pd.Categorical(input_data["heart_disease"], categories=["No", "Yes"])
 input_data["smoking_history"] = pd.Categorical(
     input_data["smoking_history"], categories=["No Info", "current", "former", "never"]
 )
 
 categorical_columns = ["gender", "hypertension", "heart_disease", "smoking_history"]
+
+# One-hot encode categorical features exactly as during training (drop_first=True).
 input_data_encoded = pd.get_dummies(input_data, columns=categorical_columns, drop_first=True)
 
-# Ensure alignment with training features by adding missing columns and reordering.
+# Ensure alignment with training features by adding any missing columns.
 for col in training_features:
     if col not in input_data_encoded.columns:
         input_data_encoded[col] = 0
 
+# Reorder columns to match the training feature order.
 input_data_encoded = input_data_encoded[training_features]
 
 # Apply min–max normalization for HbA1c_level.
@@ -84,7 +97,7 @@ input_data_encoded["HbA1c_level"] = (
     input_data_encoded["HbA1c_level"] - HBA1c_MIN
 ) / (HBA1c_MAX - HBA1c_MIN)
 
-# Scale the input data using the saved scaler.
+# Scale the input data.
 input_scaled = scaler.transform(input_data_encoded)
 
 # ------------------ DEBUG OPTIONS ------------------
