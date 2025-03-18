@@ -88,6 +88,6 @@ if st.button("Predict"):
 
     # Fix the Incorrect Else Statement
     if closer_to_diabetes:
-        st.markdown('<p style="color:red; font-weight:bold; font-size:26px;">🔍 Your values are closer to the **diabetic group**.</p>', unsafe_allow_html=True)
+        st.markdown('<p style="color:red; font-weight:bold; font-size:26px;">Your values are closer to the **diabetic group**.</p>', unsafe_allow_html=True)
     else:
-        st.markdown('<p style="color:green; font-weight:bold; font-size:26px;">📊 Your values are closer to the **non-diabetic group**.</p>', unsafe_allow_html=True)')
+        st.markdown ('<p style="color:green; font-weight:bold; font-size:26px;"> Your values are closer to the **non-diabetic group**.</p>', unsafe_allow_html=True)
