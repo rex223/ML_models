@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import pickle
 import os
-import matplotlib.pyplot as plt
 
 from xgboost import XGBClassifier
 from sklearn.preprocessing import StandardScaler
