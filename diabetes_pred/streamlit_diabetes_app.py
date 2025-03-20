@@ -3,14 +3,11 @@ import numpy as np
 import pandas as pd
 import pickle
 import os
-
 from xgboost import XGBClassifier
 from sklearn.preprocessing import StandardScaler
-
 # For fuzzy logic:
 import skfuzzy as fuzz
 import skfuzzy.control as ctrl
-
 # For SHAP:
 import shap
 
@@ -41,7 +38,7 @@ risk_sim = ctrl.ControlSystemSimulation(risk_ctrl)
 explainer = shap.TreeExplainer(xgb_model)
 
 # ------------------ STREAMLIT UI ------------------
-st.title("🩸 Diabetes Prediction & Pre-Diabetes Risk Assessment")
+st.title(" Diabetes Prediction & Pre-Diabetes Risk Assessment")
 st.write("Enter your details below to assess your diabetes risk:")
 
 # --- CATEGORICAL INPUTS ---
@@ -115,7 +112,7 @@ categorical_columns = ["gender", "hypertension", "heart_disease", "smoking_histo
 input_data_encoded = pd.get_dummies(input_data, columns=categorical_columns, drop_first=True)
 
 # Drop any columns in input_data_encoded that are not in training_features
-input_data_encoded = input_data_encoded.loc[:, input_data_encoded.columns.isin(training_features)]
+# input_data_encoded = input_data_encoded.loc[:, input_data_encoded.columns.isin(training_features)]
 
 # Add missing columns with zeros and align with training_features
 for col in training_features:
@@ -150,103 +147,62 @@ if st.button("🔍 Predict"):
         st.markdown(f"**Probability:** {xgb_prob[0]:.4f}")
         st.markdown("Based on your inputs, you are unlikely to have diabetes. However, continue maintaining a healthy lifestyle, monitor your health regularly, and consult a doctor if you experience any symptoms or have concerns.")
     else:
-        # Debug: Print all antecedents in the fuzzy system
-        # st.write("**Debug Info (Fuzzy System Antecedents):**")
-        # for antecedent in risk_ctrl.antecedents:
-        #     st.write(f"Antecedent: {antecedent.label}")        
-        # Use fuzzy logic to further assess risk in the Pre-Diabetic range
-        # Use fuzzy logic to further assess risk in the Pre-Diabetic range
-        # Reset the simulation object to ensure a clean state
         risk_sim = ctrl.ControlSystemSimulation(risk_ctrl)
 
-        # Set the inputs
-        try:
-            risk_sim.input['HbA1c_level'] = HbA1c_level
-            risk_sim.input['bmi'] = bmi
-            risk_sim.input['blood_glucose_level'] = blood_glucose_level
-            risk_sim.input['hypertension'] = hypertension_val
-            # Map smoking_history_ui to a binary value for the fuzzy system
-            smoking_val = 1 if smoking_history_ui in ["current", "former"] else 0
-            risk_sim.input['smoking'] = smoking_val
-        except Exception as e:
-            st.error(f"Error setting fuzzy inputs: {e}")
-            st.stop()
-        st.write("**Debug Info (State of risk_sim.input):**")
-        st.write(f"Type of risk_sim.input: {type(risk_sim.input)}")
-        st.write(f"Content of risk_sim.input: {risk_sim.input}")
-        # Debug: Print all input values to ensure they are set
-        # Debug: Print all input values to ensure they are set
-        st.write("**Debug Info (Fuzzy System Inputs):**")
-        try:
-            # Use risk_sim.inputs to access the input values
-            for key, value in risk_sim.inputs.items():
-                st.write(f"Input {key}: {value}")
-        except Exception as e:
-            st.error(f"Error accessing fuzzy system inputs: {e}")
-            st.stop()
-
-        # Debug: Print membership degrees for numerical inputs
-        st.write("**Debug Info (Membership Degrees):**")
-        # HbA1c_level
-        try:
-            hba1c_antecedent = risk_ctrl.antecedent['HbA1c_level']
-            st.write(f"HbA1c_level ({HbA1c_level}):")
-            for label in hba1c_antecedent.terms:
-                membership = fuzz.interp_membership(hba1c_antecedent.universe, hba1c_antecedent[label].mf, HbA1c_level)
-                st.write(f"  {label}: {membership:.4f}")
-        except Exception as e:
-            st.error(f"Error accessing HbA1c_level antecedent: {e}")
-            # bmi
-        try:
-            bmi_antecedent = risk_ctrl.antecedent['bmi']
-            st.write(f"bmi ({bmi}):")
-            for label in bmi_antecedent.terms:
-                membership = fuzz.interp_membership(bmi_antecedent.universe, bmi_antecedent[label].mf, bmi)
-                st.write(f"  {label}: {membership:.4f}")
-        except Exception as e:
-            st.error(f"Error accessing bmi antecedent: {e}")
-
-            # blood_glucose_level
-        try:
-            glucose_antecedent = risk_ctrl.antecedent['blood_glucose_level']
-            st.write(f"blood_glucose_level ({blood_glucose_level}):")
-            for label in glucose_antecedent.terms:
-                membership = fuzz.interp_membership(glucose_antecedent.universe, glucose_antecedent[label].mf, blood_glucose_level)
-                st.write(f"  {label}: {membership:.4f}")
-        except Exception as e:
-            st.error(f"Error accessing blood_glucose_level antecedent: {e}")
-
-        # Debug: Print all rules in the fuzzy system
-        st.write("**Debug Info (Fuzzy System Rules):**")
-        for rule in risk_ctrl.rules:
-            st.write(f"Rule: {rule}")
-
-        try:
-            risk_sim.compute()
-            # Debug: Print the entire output dictionary
-            st.write("**Debug Info (Fuzzy System Outputs):**")
-            st.write(risk_sim.output)
-            if 'diabetes_risk' in risk_sim.output:
-                fuzzy_score = risk_sim.output['diabetes_risk']
-            else:
-                st.warning("⚠️ Fuzzy system failed to compute a risk score. Using default value.")
-            #default valueu for a neutral score
-                fuzzy_score = 50.0 
-        except Exception as e:    
-            st.error(f"Error in fuzzy system computation: {e}")
-            st.stop()
+    # Set the inputs
+    try:
+        # Convert Series to float if necessary
+        risk_sim.input['hba1c_level'] = float(normalized_hba1c.iloc[0]) if isinstance(normalized_hba1c, pd.Series) else float(normalized_hba1c)
+        risk_sim.input['bmi'] = float(bmi)
+        risk_sim.input['blood_glucose_level'] = float(blood_glucose_level)
+        risk_sim.input['hypertension'] = float(hypertension_val)
         
-        # Interpret the Pre-Diabetic risk based on XGBoost probability
-        if xgb_prob[0] >= 0.15:
-            st.warning("⚠️ The model indicates a **Pre-Diabetic Risk** (High risk).")
-            st.markdown("You are at high risk of developing diabetes. Consider making lifestyle changes such as improving your diet, increasing physical activity, and consulting a doctor for further guidance.")
-        elif xgb_prob[0] >= 0.05:
-            st.info("ℹ️ The model indicates a **Pre-Diabetic Risk** (Moderate risk).")
-            st.markdown("You are at moderate risk of developing diabetes. Monitor your health closely, adopt preventive measures, and consider consulting a doctor for advice.")
-        else:
-            st.success("✅ The model indicates a **Pre-Diabetic Risk** (Low risk).")
-            st.markdown("You are at low risk of developing diabetes. Continue maintaining a healthy lifestyle and monitor your health regularly.")
-            
+        # Convert categorical input to integer for fuzzy logic
+        smoking_val = 1 if smoking_history_ui in ["current", "former"] else 0
+        risk_sim.input['smoking'] = float(smoking_val)
+
+    except Exception as e:
+        st.error(f"Error setting fuzzy inputs: {e}")
+        st.stop()
+
+    # # Debug: Print membership degrees
+    # st.write("**Debug Info (Membership Degrees):**")
+    # antecedents_dict = {ant.label: ant for ant in antecedents_list}  # Convert list to dictionary
+
+    # for key, antecedent in antecedents_dict.items():
+    #     try:
+    #         input_value = risk_sim.input[key]
+    #         st.write(f"{key} ({input_value}):")
+    #         for label in antecedent.terms:
+    #             membership = fuzz.interp_membership(antecedent.universe, antecedent[label].mf, input_value)
+    #             st.write(f"  {label}: {membership:.4f}")
+    #     except Exception as e:
+    #         st.error(f"Error computing membership for {key}: {e}")
+
+
+    # Compute the fuzzy output
+    try:
+        risk_sim.compute()
+        st.write("**Debug Info (Fuzzy System Outputs):**")
+        st.write(risk_sim.output)
+        
+        fuzzy_score = risk_sim.output.get("diabetes_risk", 50.0)  # Default to 50.0 if computation fails
+    except Exception as e:
+        st.error(f"Error in fuzzy system computation: {e}")
+        st.stop()
+
+    # Interpret the Pre-Diabetic risk
+    if xgb_prob[0] >= 0.15:
+        st.warning("⚠️ The model indicates a **Pre-Diabetic Risk** (High risk).")
+        st.markdown("You are at high risk of developing diabetes. Consider making lifestyle changes such as improving your diet, increasing physical activity, and consulting a doctor for further guidance.")
+    elif xgb_prob[0] >= 0.05:
+        st.info("ℹ️ The model indicates a **Pre-Diabetic Risk** (Moderate risk).")
+        st.markdown("You are at moderate risk of developing diabetes. Monitor your health closely, adopt preventive measures, and consider consulting a doctor for advice.")
+    else:
+        st.success("✅ The model indicates a **Pre-Diabetic Risk** (Low risk).")
+        st.markdown("You are at low risk of developing diabetes. Continue maintaining a healthy lifestyle and monitor your health regularly.")
+
+                
         st.markdown(f"**XGB Probability:** {xgb_prob[0]:.4f} | **Fuzzy Risk Score:** {fuzzy_score:.4f}")
 
 # ------------------ DEBUG OPTIONS ------------------
@@ -270,6 +226,11 @@ if st.checkbox("Consequents name?"):
     st.write("**Debug Info (Fuzzy System Consequents):**")
     for consequent in risk_ctrl.consequents:
         st.write(f"Consequent: {consequent.label}")       
+# Debug: Print fuzzy rules
+if st.checkbox("Fuzzy rules"):
+    st.write("**Debug Info (Fuzzy System Rules):**")
+    for rule in risk_ctrl.rules:
+        st.write(f"Rule: {rule}")
 # ------------- FOOTER ------------------
 st.markdown("""
     ---
