@@ -11,62 +11,38 @@ from sklearn.preprocessing import StandardScaler
 import skfuzzy as fuzz
 import skfuzzy.control as ctrl
 
+# For SHAP:
+import shap
+
+
 # ------------------ MODEL LOADING ------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Load the saved XGBoost model, scaler, and training features
-with open(os.path.join(BASE_DIR, "xgb_model.pkl"), "rb") as file:
-    xgb_model = pickle.load(file)
+# Load the saved XGBoost model, scaler, training features, and fuzzy system
+try:
+    with open(os.path.join(BASE_DIR, "xgb_model.pkl"), "rb") as file:
+        xgb_model = pickle.load(file)
+    with open(os.path.join(BASE_DIR, "scaler.pkl"), "rb") as file:
+        scaler = pickle.load(file)
+    with open(os.path.join(BASE_DIR, "features.pkl"), "rb") as file:
+        training_features = pickle.load(file)  
+    with open(os.path.join(BASE_DIR, "hba1c_min_max.pkl"), "rb") as file:
+        hba1c_min, hba1c_max = pickle.load(file)
+    with open(os.path.join(BASE_DIR, "fuzzy.pkl"), "rb") as file:
+        risk_ctrl = pickle.load(file)
+except FileNotFoundError as e:
+    st.error(f"Error loading model, scaler, or fuzzy system: {e}")
+    st.stop()
 
-with open(os.path.join(BASE_DIR, "scaler.pkl"), "rb") as file:
-    scaler = pickle.load(file)
-
-with open(os.path.join(BASE_DIR, "features.pkl"), "rb") as file:
-    training_features = pickle.load(file)  # e.g., a list or Pandas Index of feature names
-
-# ------------------ FUZZY LOGIC SYSTEM DEFINITION ------------------
-# Define fuzzy variables for clinical parameters
-hba1c = ctrl.Antecedent(np.arange(3, 15, 0.1), 'HbA1c_level')
-bmi = ctrl.Antecedent(np.arange(10, 50, 0.1), 'bmi')
-glucose = ctrl.Antecedent(np.arange(50, 300, 1), 'blood_glucose_level')
-risk = ctrl.Consequent(np.arange(0, 1.1, 0.1), 'diabetes_risk')
-
-# Automatically create 3 membership functions for continuous variables
-hba1c.automf(3)   # Defaults: poor, average, good
-bmi.automf(3)
-glucose.automf(3)
-risk.automf(3)
-
-# Optionally, rename them to 'low', 'medium', 'high' for interpretability
-hba1c.terms['low'] = hba1c.terms.pop('poor')
-hba1c.terms['medium'] = hba1c.terms.pop('average')
-hba1c.terms['high'] = hba1c.terms.pop('good')
-
-bmi.terms['low'] = bmi.terms.pop('poor')
-bmi.terms['medium'] = bmi.terms.pop('average')
-bmi.terms['high'] = bmi.terms.pop('good')
-
-glucose.terms['low'] = glucose.terms.pop('poor')
-glucose.terms['medium'] = glucose.terms.pop('average')
-glucose.terms['high'] = glucose.terms.pop('good')
-
-risk.terms['low'] = risk.terms.pop('poor')
-risk.terms['medium'] = risk.terms.pop('average')
-risk.terms['high'] = risk.terms.pop('good')
-
-# Define fuzzy rules.
-# These are examples; adjust them based on domain knowledge.
-rule1 = ctrl.Rule(hba1c['high'] | glucose['high'], risk['high'])
-rule2 = ctrl.Rule(hba1c['medium'] & glucose['medium'] & bmi['medium'], risk['medium'])
-rule3 = ctrl.Rule(hba1c['low'] & glucose['low'] & bmi['low'], risk['low'])
-
-# Create and initialize fuzzy control system
-risk_ctrl = ctrl.ControlSystem([rule1, rule2, rule3])
+# Initialize the fuzzy control system simulation
 risk_sim = ctrl.ControlSystemSimulation(risk_ctrl)
+
+# Initialize SHAP explainer
+explainer = shap.TreeExplainer(xgb_model)
 
 # ------------------ STREAMLIT UI ------------------
 st.title("🩸 Diabetes Prediction & Pre-Diabetes Risk Assessment")
-st.write("Enter your details below:")
+st.write("Enter your details below to assess your diabetes risk:")
 
 # --- CATEGORICAL INPUTS ---
 hypertension_ui = st.selectbox("⚕️ Hypertension", ["Yes", "No"])
@@ -77,10 +53,18 @@ smoking_history_ui = st.selectbox("🚬 Smoking History", ["never", "current", "
 # --- NUMERICAL INPUTS ---
 age = st.number_input("📅 Age", min_value=1, max_value=120, value=30)
 bmi = st.number_input("⚖️ BMI", min_value=10.0, max_value=50.0, value=25.0)
-HbA1c_level = st.number_input("🩸 HbA1c Level", min_value=3.0, max_value=15.0, value=8.0)
-blood_glucose_level = st.number_input("🧪 Blood Glucose Level", min_value=50, max_value=300, value=140)
+HbA1c_level = st.number_input("🩸 HbA1c Level", min_value=3.0, max_value=15.0, value=6.5)
+blood_glucose_level = st.number_input("🧪 Blood Glucose Level", min_value=50, max_value=300, value=126)
 
-# Map categorical inputs to the format used during training.
+# Input validation
+if HbA1c_level < 3.0 or HbA1c_level > 15.0:
+    st.warning("⚠️ HbA1c Level should be between 3.0 and 15.0. Please adjust your input.")
+if blood_glucose_level < 50 or blood_glucose_level > 300:
+    st.warning("⚠️ Blood Glucose Level should be between 50 and 300. Please adjust your input.")
+if bmi < 10.0 or bmi > 50.0:
+    st.warning("⚠️ BMI should be between 10.0 and 50.0. Please adjust your input.")
+
+# Map categorical inputs to the format used during training
 hypertension_val = "1" if hypertension_ui == "Yes" else "0"
 heart_disease_val = "1" if heart_disease_ui == "Yes" else "0"
 
@@ -92,68 +76,202 @@ input_dict = {
     "smoking_history": [smoking_history_ui],
     "age": [age],
     "bmi": [bmi],
-    "HbA1c_level": [HbA1c_level],
+    "HbA1c_level": [HbA1c_level],  # Try without normalization first
     "blood_glucose_level": [blood_glucose_level]
 }
+
 input_data = pd.DataFrame(input_dict)
+input_data["hypertension"] = pd.Categorical(input_data["hypertension"], categories=["0", "1"])
+input_data["heart_disease"] = pd.Categorical(input_data["heart_disease"], categories=["0", "1"])
+
+
+# Debug: Raw input data
+st.write("**Debug Info (Raw Input Data):**")
+st.write(input_data)
+
+# Try with normalization (comment out if not used during training)
+normalized_hba1c = (input_data['HbA1c_level'] - hba1c_min) / (hba1c_max - hba1c_min)
+input_data['HbA1c_level'] = normalized_hba1c
+
+# Debug: After HbA1c normalization (if applied)
+# st.write("**Debug Info (After HbA1c Normalization):**")
+# st.write(f"HbA1c Min: {hba1c_min}, HbA1c Max: {hba1c_max}")
+# st.write(f"Normalized HbA1c: {normalized_hba1c[0]:.4f}")
+# st.write(input_data)
+# Debug: Print all consequents in the fuzzy system
+# st.write("**Debug Info (Fuzzy System Consequents):**")
+# for consequent in risk_ctrl.consequents:
+#     st.write(f"Consequent: {consequent.label}")
 
 # Set fixed categories for consistent one-hot encoding
 input_data["hypertension"] = pd.Categorical(input_data["hypertension"], categories=["0", "1"])
 input_data["heart_disease"] = pd.Categorical(input_data["heart_disease"], categories=["0", "1"])
-input_data["gender"] = pd.Categorical(input_data["gender"], categories=["Female", "Male"])
+input_data["gender"] = pd.Categorical(input_data["gender"], categories=["Female", "Male", "Other"])
 input_data["smoking_history"] = pd.Categorical(input_data["smoking_history"], categories=["No Info", "current", "former", "never"])
+
 
 # One-hot encode categorical features
 categorical_columns = ["gender", "hypertension", "heart_disease", "smoking_history"]
 input_data_encoded = pd.get_dummies(input_data, columns=categorical_columns, drop_first=True)
 
-# Ensure alignment with training features
+# Drop any columns in input_data_encoded that are not in training_features
+input_data_encoded = input_data_encoded.loc[:, input_data_encoded.columns.isin(training_features)]
+
+# Add missing columns with zeros and align with training_features
 for col in training_features:
     if col not in input_data_encoded.columns:
         input_data_encoded[col] = 0
 input_data_encoded = input_data_encoded[training_features]
 
-# Scale the input data using the saved scaler
-input_scaled = scaler.transform(input_data_encoded)
+
+# Scale only the continuous features
+continuous_cols = ['age', 'bmi', 'HbA1c_level', 'blood_glucose_level']
+categorical_cols = [col for col in input_data_encoded.columns if col not in continuous_cols]
+
 
 # ------------------ MODEL PREDICTION ------------------
 if st.button("🔍 Predict"):
     # Get XGBoost prediction probabilities for class 1
-    xgb_prob = xgb_model.predict_proba(input_scaled)[:, 1]
+    xgb_prob = xgb_model.predict_proba(input_data_encoded)[:, 1]
     
-    # Use XGBoost's probability for final decision (primary classifier)
-    # For simplicity, we'll define:
-    #  - if probability >= 0.6, classify as DIABETIC
-    #  - if probability <= 0.4, classify as NON-DIABETIC
-    #  - if between 0.4 and 0.6, use fuzzy logic to indicate Pre-Diabetic risk
-    if xgb_prob[0] >= 0.6:
-        st.error("⚠️ The model predicts: **DIABETIC**")
-        st.markdown(f"**Probability:** {xgb_prob[0]:.2f}")
-    elif xgb_prob[0] <= 0.4:
-        st.success("✅ The model predicts: **NON-DIABETIC**")
-        st.markdown(f"**Probability:** {xgb_prob[0]:.2f}")
+    # Debug: Raw prediction output
+    st.write("**Debug Info (Model Prediction):**")
+    st.write(f"Raw XGBoost Probabilities (Class 0, Class 1): {xgb_model.predict_proba(input_data_encoded)[0]}")
+    st.write(f"Probability of Class 1 (Diabetic): {xgb_model.predict_proba(input_data_encoded)}")
+
+
+    # Use XGBoost probability for primary classification
+    if xgb_prob[0] >= 0.150:  # Use the training threshold of 0.146
+        st.error("⚠️ The model predicts that u are: **DIABETIC**")
+        st.markdown(f"**Probability:** {xgb_prob[0]:.4f}")
+        st.markdown("Based on your inputs, you may have diabetes. It is strongly recommended to consult a healthcare professional for a comprehensive evaluation and appropriate medical advice.")
+    elif xgb_prob[0] <= 0.002:  # Not Diabetic threshold
+        st.success("✅ The model predicts that you are: **NON-DIABETIC**")
+        st.markdown(f"**Probability:** {xgb_prob[0]:.4f}")
+        st.markdown("Based on your inputs, you are unlikely to have diabetes. However, continue maintaining a healthy lifestyle, monitor your health regularly, and consult a doctor if you experience any symptoms or have concerns.")
     else:
-        # Use fuzzy logic to further assess risk
-        risk_sim.input['HbA1c_level'] = HbA1c_level
-        risk_sim.input['bmi'] = bmi
-        risk_sim.input['blood_glucose_level'] = blood_glucose_level
-        risk_sim.compute()
-        fuzzy_score = risk_sim.output['diabetes_risk']
+        # Debug: Print all antecedents in the fuzzy system
+        # st.write("**Debug Info (Fuzzy System Antecedents):**")
+        # for antecedent in risk_ctrl.antecedents:
+        #     st.write(f"Antecedent: {antecedent.label}")        
+        # Use fuzzy logic to further assess risk in the Pre-Diabetic range
+        # Use fuzzy logic to further assess risk in the Pre-Diabetic range
+        # Reset the simulation object to ensure a clean state
+        risk_sim = ctrl.ControlSystemSimulation(risk_ctrl)
+
+        # Set the inputs
+        try:
+            risk_sim.input['HbA1c_level'] = HbA1c_level
+            risk_sim.input['bmi'] = bmi
+            risk_sim.input['blood_glucose_level'] = blood_glucose_level
+            risk_sim.input['hypertension'] = hypertension_val
+            # Map smoking_history_ui to a binary value for the fuzzy system
+            smoking_val = 1 if smoking_history_ui in ["current", "former"] else 0
+            risk_sim.input['smoking'] = smoking_val
+        except Exception as e:
+            st.error(f"Error setting fuzzy inputs: {e}")
+            st.stop()
+        st.write("**Debug Info (State of risk_sim.input):**")
+        st.write(f"Type of risk_sim.input: {type(risk_sim.input)}")
+        st.write(f"Content of risk_sim.input: {risk_sim.input}")
+        # Debug: Print all input values to ensure they are set
+        # Debug: Print all input values to ensure they are set
+        st.write("**Debug Info (Fuzzy System Inputs):**")
+        try:
+            # Use risk_sim.inputs to access the input values
+            for key, value in risk_sim.inputs.items():
+                st.write(f"Input {key}: {value}")
+        except Exception as e:
+            st.error(f"Error accessing fuzzy system inputs: {e}")
+            st.stop()
+
+        # Debug: Print membership degrees for numerical inputs
+        st.write("**Debug Info (Membership Degrees):**")
+        # HbA1c_level
+        try:
+            hba1c_antecedent = risk_ctrl.antecedent['HbA1c_level']
+            st.write(f"HbA1c_level ({HbA1c_level}):")
+            for label in hba1c_antecedent.terms:
+                membership = fuzz.interp_membership(hba1c_antecedent.universe, hba1c_antecedent[label].mf, HbA1c_level)
+                st.write(f"  {label}: {membership:.4f}")
+        except Exception as e:
+            st.error(f"Error accessing HbA1c_level antecedent: {e}")
+            # bmi
+        try:
+            bmi_antecedent = risk_ctrl.antecedent['bmi']
+            st.write(f"bmi ({bmi}):")
+            for label in bmi_antecedent.terms:
+                membership = fuzz.interp_membership(bmi_antecedent.universe, bmi_antecedent[label].mf, bmi)
+                st.write(f"  {label}: {membership:.4f}")
+        except Exception as e:
+            st.error(f"Error accessing bmi antecedent: {e}")
+
+            # blood_glucose_level
+        try:
+            glucose_antecedent = risk_ctrl.antecedent['blood_glucose_level']
+            st.write(f"blood_glucose_level ({blood_glucose_level}):")
+            for label in glucose_antecedent.terms:
+                membership = fuzz.interp_membership(glucose_antecedent.universe, glucose_antecedent[label].mf, blood_glucose_level)
+                st.write(f"  {label}: {membership:.4f}")
+        except Exception as e:
+            st.error(f"Error accessing blood_glucose_level antecedent: {e}")
+
+        # Debug: Print all rules in the fuzzy system
+        st.write("**Debug Info (Fuzzy System Rules):**")
+        for rule in risk_ctrl.rules:
+            st.write(f"Rule: {rule}")
+
+        try:
+            risk_sim.compute()
+            # Debug: Print the entire output dictionary
+            st.write("**Debug Info (Fuzzy System Outputs):**")
+            st.write(risk_sim.output)
+            if 'diabetes_risk' in risk_sim.output:
+                fuzzy_score = risk_sim.output['diabetes_risk']
+            else:
+                st.warning("⚠️ Fuzzy system failed to compute a risk score. Using default value.")
+            #default valueu for a neutral score
+                fuzzy_score = 50.0 
+        except Exception as e:    
+            st.error(f"Error in fuzzy system computation: {e}")
+            st.stop()
         
-        # Interpret fuzzy risk score:
-        # If fuzzy score is high, suggest pre-diabetic risk.
-        if fuzzy_score >= 0.6:
+        # Interpret the Pre-Diabetic risk based on XGBoost probability
+        if xgb_prob[0] >= 0.15:
             st.warning("⚠️ The model indicates a **Pre-Diabetic Risk** (High risk).")
-        elif fuzzy_score >= 0.4:
+            st.markdown("You are at high risk of developing diabetes. Consider making lifestyle changes such as improving your diet, increasing physical activity, and consulting a doctor for further guidance.")
+        elif xgb_prob[0] >= 0.05:
             st.info("ℹ️ The model indicates a **Pre-Diabetic Risk** (Moderate risk).")
+            st.markdown("You are at moderate risk of developing diabetes. Monitor your health closely, adopt preventive measures, and consider consulting a doctor for advice.")
         else:
             st.success("✅ The model indicates a **Pre-Diabetic Risk** (Low risk).")
+            st.markdown("You are at low risk of developing diabetes. Continue maintaining a healthy lifestyle and monitor your health regularly.")
             
-        st.markdown(f"**XGB Probability:** {xgb_prob[0]:.2f} | **Fuzzy Risk Score:** {fuzzy_score:.2f}")
+        st.markdown(f"**XGB Probability:** {xgb_prob[0]:.4f} | **Fuzzy Risk Score:** {fuzzy_score:.4f}")
 
 # ------------------ DEBUG OPTIONS ------------------
-if st.checkbox("🔎 Show Debug Info"):
-    st.write("Encoded Features:")
+
+# How input data is encoded?
+if st.checkbox("🔎 Show Additional Debug Info"):
+    st.write("**Encoded Features:**")
     st.write(input_data_encoded)
-    st.write("Scaled Features:")
-    st.write(input_scaled)
+    
+# Use SHAP to explain the prediction?
+if st.checkbox("Know the weightage of each feature in the prediction?"):
+    shap_values = explainer.shap_values(input_data_encoded)
+    st.write("**SHAP Values (Contribution of Each Feature tPrediction):**")
+    shap_df = pd.DataFrame({
+        "Feature": training_features,
+        "SHAP Value": shap_values[0]
+    })
+    st.write(shap_df)
+# Debug: Print all consequents in the fuzzy system
+if st.checkbox("Consequents name?"):
+    st.write("**Debug Info (Fuzzy System Consequents):**")
+    for consequent in risk_ctrl.consequents:
+        st.write(f"Consequent: {consequent.label}")       
+# ------------- FOOTER ------------------
+st.markdown("""
+    ---
+    **Disclaimer:** This app is for informational purposes only and should not be used as a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.
+""")
