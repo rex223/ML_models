@@ -3,4 +3,4 @@ pandas==2.2.3
 scikit_fuzzy==0.4.2
 scikit_learn==1.6.1
 shap==0.47.0
-xgboost==3.0.0
+xgboost==2.0.0
