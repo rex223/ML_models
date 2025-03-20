@@ -4,9 +4,8 @@ This repository contains various machine learning models for **[your project pur
 
 ## 📊 Models
 This repository includes multiple models, such as:
-- **Model 1** – [Brief description]
-- **Model 2** – [Brief description]
-- *(Add more models as needed)*
+- **Diabetes prediction** – A model based on gradient boosting and fuzzy which predicts your diabetes and risk of 			    pr-diabetes .
+- More models to be added soon.......
 
 ## ⚙️ Setup
 To get started, install the required dependencies by running the following command:
