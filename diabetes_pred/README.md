@@ -3,7 +3,7 @@
 This repository contains a **Diabetes Prediction Model** built using machine learning. The model predicts whether a person has diabetes based on input health parameters. The project also includes a **Streamlit web application** for easy interaction with users.  
 
 ## 🔗 Live Demo  
-🚀 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://diabetesprediction1model.streamlit.app/)
+🚀[![Live App](https://img.shields.io/badge/Live_Diabetes_Prediction_App-FF4B4B?style=for-the-badge&logo=streamlit)](https://diabetesprediction1model.streamlit.app/)
 
 ## 📊 Features  
 - ✅ **Interactive Input System**: Users can enter health parameters via a user-friendly UI.  
