@@ -138,7 +138,7 @@ if st.button("🔍 Predict"):
 
 
     # Use XGBoost probability for primary classification
-    if xgb_prob[0] >= 0.150:  # Use the training threshold of 0.146
+    if xgb_prob[0] >= 0.146:  # Use the training threshold of 0.146
         st.error("⚠️ The model predicts that u are: **DIABETIC**")
         st.markdown(f"**Probability:** {xgb_prob[0]:.4f}")
         st.markdown("Based on your inputs, you may have diabetes. It is strongly recommended to consult a healthcare professional for a comprehensive evaluation and appropriate medical advice.")
@@ -186,13 +186,13 @@ if st.button("🔍 Predict"):
         st.write("**Debug Info (Fuzzy System Outputs):**")
         st.write(risk_sim.output)
         
-        fuzzy_score = risk_sim.output.get("diabetes_risk", 50.0)  # Default to 50.0 if computation fails
+        fuzzy_score = risk_sim.output.get("diabetes_risk", 50.0) 
     except Exception as e:
         st.error(f"Error in fuzzy system computation: {e}")
         st.stop()
 
     # Interpret the Pre-Diabetic risk
-    if xgb_prob[0] >= 0.15:
+    if xgb_prob[0] >= 0.146:
         st.warning("⚠️ The model indicates a **Pre-Diabetic Risk** (High risk).")
         st.markdown("You are at high risk of developing diabetes. Consider making lifestyle changes such as improving your diet, increasing physical activity, and consulting a doctor for further guidance.")
     elif xgb_prob[0] >= 0.05:

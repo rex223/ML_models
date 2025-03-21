@@ -13,6 +13,8 @@ This repository contains a **Diabetes Prediction Model** built using machine lea
 ## 📈 Model Performance: 
 - **Training Accuracy**: 🏆 **98.04098 %**  
 - **Test Accuracy**: 📊 **97.61202 %**  
+- **Since the model belongs to medical field its important to reduce the False Negatives as much as possible, thus the actual accuracy may be reduced by a few digits**
+- **Adjusted Accuracy**: **95.28961**
 
 🚀 Usage
 
