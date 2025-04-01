@@ -65,3 +65,5 @@ Thumbs.db           # Windows
 # If using Git LFS, track large files explicitly in .gitattributes
 # Example: 
 # *.pth filter=lfs diff=lfs merge=lfs -text
+#Influenza model 
+Influenza_pandemic_prediction_model/venv/
