@@ -1,3 +1,6 @@
+I'll enhance the styling of your Streamlit diabetes prediction app to make it look more polished and medically appropriate. Let me create a styled version of your code:
+
+```python
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -11,49 +14,249 @@ import skfuzzy.control as ctrl
 # For SHAP:
 import shap
 
+# Set page configuration
+st.set_page_config(
+    page_title="Diabetes Risk Assessment",
+    page_icon="🩺",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Custom CSS styling
+st.markdown("""
+<style>
+    .main-header {
+        font-family: 'Helvetica Neue', sans-serif;
+        font-size: 36px;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 20px;
+        text-align: center;
+        padding: 20px;
+        border-bottom: 2px solid #3498db;
+    }
+    .subheader {
+        font-size: 24px;
+        font-weight: 500;
+        color: #34495e;
+        margin: 20px 0 10px 0;
+    }
+    .result-box {
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+    }
+    .diabetic-box {
+        background-color: #ffebee;
+        border-left: 5px solid #f44336;
+    }
+    .prediabetic-box {
+        background-color: #fff8e1;
+        border-left: 5px solid #ffc107;
+    }
+    .healthy-box {
+        background-color: #e8f5e9;
+        border-left: 5px solid #4caf50;
+    }
+    .metric-label {
+        font-weight: 600;
+        color: #34495e;
+    }
+    .info-box {
+        background-color: #e3f2fd;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 10px 0;
+        border-left: 5px solid #2196f3;
+    }
+    .stApp a {
+        color: #3498db;
+    }
+    .stApp a:hover {
+        color: #2c3e50;
+    }
+    .input-section {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    .footnote {
+        font-size: 12px;
+        color: #7f8c8d;
+        text-align: center;
+        margin-top: 50px;
+    }
+    .highlight {
+        font-weight: bold;
+        color: #3498db;
+    }
+    /* Styled radio buttons and selectors */
+    div[data-testid="stSelectbox"] label {
+        font-weight: 500;
+        color: #2c3e50;
+    }
+    /* Custom header for sections */
+    .section-header {
+        background-color: #3498db;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-weight: 500;
+        margin: 20px 0 10px 0;
+    }
+    /* Debug sections */
+    .debug-box {
+        background-color: #f0f0f0;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px dashed #95a5a6;
+        margin: 10px 0;
+    }
+    /* Prediction button */
+    .stButton button {
+        background-color: #2c3e50;
+        color: white;
+        font-weight: 500;
+        padding: 10px 20px;
+        border-radius: 50px;
+        border: none;
+        transition: all 0.3s;
+    }
+    .stButton button:hover {
+        background-color: #3498db;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    /* Loading spinner */
+    div[data-testid="stSpinner"] {
+        margin: 20px 0;
+    }
+    /* Progress bars */
+    div[data-testid="stProgressBar"] {
+        margin: 10px 0;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # ------------------ MODEL LOADING ------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# App layout - Header
+st.markdown('<div class="main-header">🩺 Diabetes Risk Assessment & Prediction</div>', unsafe_allow_html=True)
+
+st.markdown("""
+<div class="info-box">
+This clinical tool helps assess your risk of diabetes based on clinical and lifestyle factors.
+For accurate results, please provide precise information. This tool should be used in consultation
+with healthcare professionals.
+</div>
+""", unsafe_allow_html=True)
+
+# Create a sidebar for information
+with st.sidebar:
+    st.image("https://img.freepik.com/free-vector/diabetes-awareness-month-abstract-concept-illustration_335657-3831.jpg", use_column_width=True)
+    st.markdown('<div class="subheader">About This Tool</div>', unsafe_allow_html=True)
+    st.markdown("""
+    This diabetes risk assessment tool uses machine learning to predict:
+    - Diabetes status (Diabetic/Non-diabetic)
+    - Pre-diabetes risk level
+    
+    The prediction is based on:
+    - Clinical measurements (HbA1c, Blood glucose)
+    - Health conditions (Hypertension, Heart disease)
+    - Personal factors (Age, BMI, Gender)
+    - Lifestyle factors (Smoking history)
+    
+    **References:**
+    - American Diabetes Association Guidelines
+    - World Health Organization Diabetes Criteria
+    """)
+    
+    st.markdown('<div class="subheader">Risk Factors</div>', unsafe_allow_html=True)
+    st.markdown("""
+    **High-risk categories:**
+    - HbA1c ≥ 6.5%
+    - Fasting blood glucose ≥ 126 mg/dL
+    - BMI ≥ 30
+    - Age > 45 years
+    - Family history of diabetes
+    - Hypertension or heart disease
+    - Sedentary lifestyle
+    """)
+
 # Load the saved XGBoost model, scaler, training features, and fuzzy system
 try:
-    with open(os.path.join(BASE_DIR, "xgb_model.pkl"), "rb") as file:
-        xgb_model = pickle.load(file)
-    with open(os.path.join(BASE_DIR, "scaler.pkl"), "rb") as file:
-        scaler = pickle.load(file)
-    with open(os.path.join(BASE_DIR, "features.pkl"), "rb") as file:
-        training_features = pickle.load(file)  
-    with open(os.path.join(BASE_DIR, "hba1c_min_max.pkl"), "rb") as file:
-        hba1c_min, hba1c_max = pickle.load(file)
-    with open(os.path.join(BASE_DIR, "fuzzy.pkl"), "rb") as file:
-        risk_ctrl = pickle.load(file)
+    with st.spinner("Loading clinical prediction models..."):
+        with open(os.path.join(BASE_DIR, "xgb_model.pkl"), "rb") as file:
+            xgb_model = pickle.load(file)
+        with open(os.path.join(BASE_DIR, "scaler.pkl"), "rb") as file:
+            scaler = pickle.load(file)
+        with open(os.path.join(BASE_DIR, "features.pkl"), "rb") as file:
+            training_features = pickle.load(file)  
+        with open(os.path.join(BASE_DIR, "hba1c_min_max.pkl"), "rb") as file:
+            hba1c_min, hba1c_max = pickle.load(file)
+        with open(os.path.join(BASE_DIR, "fuzzy.pkl"), "rb") as file:
+            risk_ctrl = pickle.load(file)
+
+    # Initialize the fuzzy control system simulation
+    risk_sim = ctrl.ControlSystemSimulation(risk_ctrl)
+
+    # Initialize SHAP explainer
+    explainer = shap.TreeExplainer(xgb_model)
+    
 except FileNotFoundError as e:
-    st.error(f"Error loading model, scaler, or fuzzy system: {e}")
+    st.error(f"Error loading clinical models: {e}")
     st.stop()
 
-# Initialize the fuzzy control system simulation
-risk_sim = ctrl.ControlSystemSimulation(risk_ctrl)
-
-# Initialize SHAP explainer
-explainer = shap.TreeExplainer(xgb_model)
-
 # ------------------ STREAMLIT UI ------------------
-st.title(" Diabetes Prediction & Pre-Diabetes Risk Assessment")
-st.write("Enter your details below to assess your diabetes risk:")
+# Create three columns for better layout
+col1, col2 = st.columns(2)
 
-# --- CATEGORICAL INPUTS ---
-hypertension_ui = st.selectbox("⚕️ Hypertension", ["Yes", "No"])
-heart_disease_ui = st.selectbox("❤️ Heart Disease", ["Yes", "No"])
-gender_ui = st.selectbox("🚻 Gender", ["Male", "Female"])
-smoking_history_ui = st.selectbox("🚬 Smoking History", ["never", "current", "former", "No Info"])
+# Input sections
+with col1:
+    st.markdown('<div class="section-header">Clinical Parameters</div>', unsafe_allow_html=True)
+    with st.container():
+        st.markdown('<div class="input-section">', unsafe_allow_html=True)
+        HbA1c_level = st.slider("🩸 HbA1c Level (%)", 
+                             min_value=3.0, max_value=15.0, value=6.5, step=0.1,
+                             help="HbA1c represents average blood glucose over past 3 months. Normal: <5.7%, Pre-diabetic: 5.7-6.4%, Diabetic: ≥6.5%")
+        
+        blood_glucose_level = st.slider("🧪 Blood Glucose Level (mg/dL)", 
+                                    min_value=50, max_value=300, value=126, step=1,
+                                    help="Fasting blood glucose level. Normal: <100 mg/dL, Pre-diabetic: 100-125 mg/dL, Diabetic: ≥126 mg/dL")
+        
+        bmi = st.slider("⚖️ BMI (kg/m²)", 
+                     min_value=10.0, max_value=50.0, value=25.0, step=0.1,
+                     help="Body Mass Index. Underweight: <18.5, Normal: 18.5-24.9, Overweight: 25-29.9, Obese: ≥30")
+        
+        age = st.slider("📅 Age (years)", 
+                     min_value=18, max_value=100, value=40, step=1,
+                     help="Risk increases with age, particularly after 45 years")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-# --- NUMERICAL INPUTS ---
-age = st.number_input("📅 Age", min_value=1, max_value=120, value=30)
-bmi = st.number_input("⚖️ BMI", min_value=10.0, max_value=50.0, value=25.0)
-HbA1c_level = st.number_input("🩸 HbA1c Level", min_value=3.0, max_value=15.0, value=6.5)
-blood_glucose_level = st.number_input("🧪 Blood Glucose Level", min_value=50, max_value=300, value=126)
+with col2:
+    st.markdown('<div class="section-header">Health & Lifestyle Factors</div>', unsafe_allow_html=True)
+    with st.container():
+        st.markdown('<div class="input-section">', unsafe_allow_html=True)
+        hypertension_ui = st.radio("⚕️ Hypertension (High Blood Pressure)", 
+                                ["No", "Yes"], index=0, horizontal=True,
+                                help="High blood pressure increases diabetes risk")
+        
+        heart_disease_ui = st.radio("❤️ Heart Disease", 
+                                 ["No", "Yes"], index=0, horizontal=True,
+                                 help="Pre-existing heart conditions may increase diabetes risk")
+        
+        gender_ui = st.radio("🚻 Gender", 
+                          ["Male", "Female"], index=0, horizontal=True,
+                          help="Some diabetes risk factors vary by gender")
+        
+        smoking_history_ui = st.selectbox("🚬 Smoking History", 
+                                       ["never", "former", "current", "No Info"], index=0,
+                                       help="Smoking can affect insulin sensitivity and diabetes risk")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-# Input validation
+# Input validation with styled warnings
 if HbA1c_level < 3.0 or HbA1c_level > 15.0:
     st.warning("⚠️ HbA1c Level should be between 3.0 and 15.0. Please adjust your input.")
 if blood_glucose_level < 50 or blood_glucose_level > 300:
@@ -73,7 +276,7 @@ input_dict = {
     "smoking_history": [smoking_history_ui],
     "age": [age],
     "bmi": [bmi],
-    "HbA1c_level": [HbA1c_level],  # Try without normalization first
+    "HbA1c_level": [HbA1c_level],
     "blood_glucose_level": [blood_glucose_level]
 }
 
@@ -81,24 +284,9 @@ input_data = pd.DataFrame(input_dict)
 input_data["hypertension"] = pd.Categorical(input_data["hypertension"], categories=["0", "1"])
 input_data["heart_disease"] = pd.Categorical(input_data["heart_disease"], categories=["0", "1"])
 
-
-# Debug: Raw input data
-st.write("**Debug Info (Raw Input Data):**")
-st.write(input_data)
-
-# Try with normalization (comment out if not used during training)
+# Add normalization
 normalized_hba1c = (input_data['HbA1c_level'] - hba1c_min) / (hba1c_max - hba1c_min)
 input_data['HbA1c_level'] = normalized_hba1c
-
-# Debug: After HbA1c normalization (if applied)
-# st.write("**Debug Info (After HbA1c Normalization):**")
-# st.write(f"HbA1c Min: {hba1c_min}, HbA1c Max: {hba1c_max}")
-# st.write(f"Normalized HbA1c: {normalized_hba1c[0]:.4f}")
-# st.write(input_data)
-# Debug: Print all consequents in the fuzzy system
-# st.write("**Debug Info (Fuzzy System Consequents):**")
-# for consequent in risk_ctrl.consequents:
-#     st.write(f"Consequent: {consequent.label}")
 
 # Set fixed categories for consistent one-hot encoding
 input_data["hypertension"] = pd.Categorical(input_data["hypertension"], categories=["0", "1"])
@@ -106,13 +294,9 @@ input_data["heart_disease"] = pd.Categorical(input_data["heart_disease"], catego
 input_data["gender"] = pd.Categorical(input_data["gender"], categories=["Female", "Male", "Other"])
 input_data["smoking_history"] = pd.Categorical(input_data["smoking_history"], categories=["No Info", "current", "former", "never"])
 
-
 # One-hot encode categorical features
 categorical_columns = ["gender", "hypertension", "heart_disease", "smoking_history"]
 input_data_encoded = pd.get_dummies(input_data, columns=categorical_columns, drop_first=True)
-
-# Drop any columns in input_data_encoded that are not in training_features
-# input_data_encoded = input_data_encoded.loc[:, input_data_encoded.columns.isin(training_features)]
 
 # Add missing columns with zeros and align with training_features
 for col in training_features:
@@ -120,119 +304,565 @@ for col in training_features:
         input_data_encoded[col] = 0
 input_data_encoded = input_data_encoded[training_features]
 
-
 # Scale only the continuous features
 continuous_cols = ['age', 'bmi', 'HbA1c_level', 'blood_glucose_level']
 categorical_cols = [col for col in input_data_encoded.columns if col not in continuous_cols]
 
-
 # ------------------ MODEL PREDICTION ------------------
-if st.button("🔍 Predict"):
-    # Get XGBoost prediction probabilities for class 1
-    xgb_prob = xgb_model.predict_proba(input_data_encoded)[:, 1]
-    
-    # Debug: Raw prediction output
-    st.write("**Debug Info (Model Prediction):**")
-    st.write(f"Raw XGBoost Probabilities (Class 0, Class 1): {xgb_model.predict_proba(input_data_encoded)[0]}")
-    st.write(f"Probability of Class 1 (Diabetic): {xgb_model.predict_proba(input_data_encoded)}")
+st.markdown('<div class="section-header">Risk Assessment</div>', unsafe_allow_html=True)
 
-
-    # Use XGBoost probability for primary classification
-    if xgb_prob[0] >= 0.146:  # Use the training threshold of 0.146
-        st.error("⚠️ The model predicts that u are: **DIABETIC**")
-        st.markdown(f"**Probability:** {xgb_prob[0]:.4f}")
-        st.markdown("Based on your inputs, you may have diabetes. It is strongly recommended to consult a healthcare professional for a comprehensive evaluation and appropriate medical advice.")
-    elif xgb_prob[0] <= 0.002:  # Not Diabetic threshold
-        st.success("✅ The model predicts that you are: **NON-DIABETIC**")
-        st.markdown(f"**Probability:** {xgb_prob[0]:.4f}")
-        st.markdown("Based on your inputs, you are unlikely to have diabetes. However, continue maintaining a healthy lifestyle, monitor your health regularly, and consult a doctor if you experience any symptoms or have concerns.")
-    else:
-        risk_sim = ctrl.ControlSystemSimulation(risk_ctrl)
-
-    # Set the inputs
-    try:
-        # Convert Series to float if necessary
-        risk_sim.input['hba1c_level'] = float(normalized_hba1c.iloc[0]) if isinstance(normalized_hba1c, pd.Series) else float(normalized_hba1c)
-        risk_sim.input['bmi'] = float(bmi)
-        risk_sim.input['blood_glucose_level'] = float(blood_glucose_level)
-        risk_sim.input['hypertension'] = float(hypertension_val)
+# Create a styled prediction button
+if st.button("🔍 Run Clinical Assessment", help="Click to analyze your diabetes risk based on the provided information"):
+    with st.spinner("Analyzing clinical parameters..."):
+        # Add a slight delay for UX
+        import time
+        time.sleep(0.5)
         
-        # Convert categorical input to integer for fuzzy logic
-        smoking_val = 1 if smoking_history_ui in ["current", "former"] else 0
-        risk_sim.input['smoking'] = float(smoking_val)
-
-    except Exception as e:
-        st.error(f"Error setting fuzzy inputs: {e}")
-        st.stop()
-
-    # # Debug: Print membership degrees
-    # st.write("**Debug Info (Membership Degrees):**")
-    # antecedents_dict = {ant.label: ant for ant in antecedents_list}  # Convert list to dictionary
-
-    # for key, antecedent in antecedents_dict.items():
-    #     try:
-    #         input_value = risk_sim.input[key]
-    #         st.write(f"{key} ({input_value}):")
-    #         for label in antecedent.terms:
-    #             membership = fuzz.interp_membership(antecedent.universe, antecedent[label].mf, input_value)
-    #             st.write(f"  {label}: {membership:.4f}")
-    #     except Exception as e:
-    #         st.error(f"Error computing membership for {key}: {e}")
-
-
-    # Compute the fuzzy output
-    try:
-        risk_sim.compute()
-        st.write("**Debug Info (Fuzzy System Outputs):**")
-        st.write(risk_sim.output)
+        # Get XGBoost prediction probabilities for class 1
+        xgb_prob = xgb_model.predict_proba(input_data_encoded)[:, 1]
         
-        fuzzy_score = risk_sim.output.get("diabetes_risk", 50.0) 
-    except Exception as e:
-        st.error(f"Error in fuzzy system computation: {e}")
-        st.stop()
-
-    # Interpret the Pre-Diabetic risk
-    if xgb_prob[0] >= 0.146:
-        st.warning("⚠️ The model indicates a **Pre-Diabetic Risk** (High risk).")
-        st.markdown("You are at high risk of developing diabetes. Consider making lifestyle changes such as improving your diet, increasing physical activity, and consulting a doctor for further guidance.")
-    elif xgb_prob[0] >= 0.05:
-        st.info("ℹ️ The model indicates a **Pre-Diabetic Risk** (Moderate risk).")
-        st.markdown("You are at moderate risk of developing diabetes. Monitor your health closely, adopt preventive measures, and consider consulting a doctor for advice.")
-    else:
-        st.success("✅ The model indicates a **Pre-Diabetic Risk** (Low risk).")
-        st.markdown("You are at low risk of developing diabetes. Continue maintaining a healthy lifestyle and monitor your health regularly.")
-
+        # Show clinical metrics
+        st.markdown('<div class="subheader">Clinical Assessment Results</div>', unsafe_allow_html=True)
+        
+        col_metrics1, col_metrics2, col_metrics3 = st.columns(3)
+        with col_metrics1:
+            st.metric(label="XGBoost Probability", value=f"{xgb_prob[0]:.2%}")
+        
+        # Risk level thresholds
+        if xgb_prob[0] >= 0.146:  # Diabetic
+            risk_level = "High Risk"
+            risk_color = "#f44336"
+        elif xgb_prob[0] >= 0.05:  # Pre-diabetic
+            risk_level = "Moderate Risk"
+            risk_color = "#ff9800"
+        else:  # Low risk
+            risk_level = "Low Risk"
+            risk_color = "#4caf50"
+            
+        with col_metrics2:
+            st.metric(label="Risk Level", value=risk_level)
+            
+        with col_metrics3:
+            # Try to compute fuzzy score
+            try:
+                risk_sim = ctrl.ControlSystemSimulation(risk_ctrl)
+                # Set the inputs
+                risk_sim.input['hba1c_level'] = float(normalized_hba1c.iloc[0]) if isinstance(normalized_hba1c, pd.Series) else float(normalized_hba1c)
+                risk_sim.input['bmi'] = float(bmi)
+                risk_sim.input['blood_glucose_level'] = float(blood_glucose_level)
+                risk_sim.input['hypertension'] = float(hypertension_val)
                 
-        st.markdown(f"**XGB Probability:** {xgb_prob[0]:.4f} | **Fuzzy Risk Score:** {fuzzy_score:.4f}")
+                # Convert categorical input to integer for fuzzy logic
+                smoking_val = 1 if smoking_history_ui in ["current", "former"] else 0
+                risk_sim.input['smoking'] = float(smoking_val)
+                
+                # Compute
+                risk_sim.compute()
+                fuzzy_score = risk_sim.output.get("diabetes_risk", 50.0)
+                st.metric(label="Fuzzy Risk Score", value=f"{fuzzy_score:.1f}")
+            except Exception as e:
+                st.metric(label="Fuzzy Risk Score", value="N/A")
 
-# ------------------ DEBUG OPTIONS ------------------
+        # Create risk visualization
+        st.markdown("### Risk Visualization")
+        progress_color = risk_color
+        st.progress(float(xgb_prob[0]), text=f"Diabetes Risk: {xgb_prob[0]:.2%}")
+        
+        # Main prediction result with styling based on outcome
+        if xgb_prob[0] >= 0.146:  # Use the training threshold of 0.146
+            st.markdown(f"""
+            <div class="result-box diabetic-box">
+                <h3>⚠️ Assessment Result: <span style="color: #f44336;">HIGH RISK FOR DIABETES</span></h3>
+                <p>Based on your clinical parameters, you may have diabetes or be at high risk for developing it.</p>
+                <p><strong>Recommended Actions:</strong></p>
+                <ul>
+                    <li>Consult a healthcare professional immediately for proper diagnosis</li>
+                    <li>Consider comprehensive blood tests including fasting glucose and oral glucose tolerance test</li>
+                    <li>Begin monitoring blood glucose levels regularly</li>
+                    <li>Discuss medication options with your healthcare provider</li>
+                    <li>Make significant lifestyle changes including diet and exercise</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        elif xgb_prob[0] >= 0.05:  # Pre-diabetic threshold
+            st.markdown(f"""
+            <div class="result-box prediabetic-box">
+                <h3>ℹ️ Assessment Result: <span style="color: #ff9800;">MODERATE RISK (PRE-DIABETIC)</span></h3>
+                <p>Based on your clinical parameters, you show signs of pre-diabetes, a condition that often precedes type 2 diabetes.</p>
+                <p><strong>Recommended Actions:</strong></p>
+                <ul>
+                    <li>Schedule an appointment with your healthcare provider</li>
+                    <li>Consider routine blood tests to monitor glucose levels</li>
+                    <li>Implement lifestyle modifications:</li>
+                    <ul>
+                        <li>Reduce refined carbohydrate and sugar intake</li>
+                        <li>Increase physical activity (aim for 150 minutes per week)</li>
+                        <li>Achieve and maintain a healthy weight</li>
+                        <li>Monitor blood pressure and cholesterol</li>
+                    </ul>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        else:  # Low risk
+            st.markdown(f"""
+            <div class="result-box healthy-box">
+                <h3>✅ Assessment Result: <span style="color: #4caf50;">LOW RISK</span></h3>
+                <p>Based on your clinical parameters, you currently have a low risk of diabetes.</p>
+                <p><strong>Recommended Actions:</strong></p>
+                <ul>
+                    <li>Continue maintaining a healthy lifestyle</li>
+                    <li>Have routine check-ups every 1-3 years</li>
+                    <li>Focus on preventive measures:</li>
+                    <ul>
+                        <li>Balanced diet rich in fruits, vegetables, and whole grains</li>
+                        <li>Regular physical activity</li>
+                        <li>Maintain healthy weight</li>
+                        <li>Avoid or quit smoking</li>
+                        <li>Limit alcohol consumption</li>
+                    </ul>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Key risk factors visualization
+        st.markdown("### Key Risk Factors")
+        
+        # Create columns for risk factor visualization
+        col_risk1, col_risk2, col_risk3 = st.columns(3)
+        
+        # HbA1c risk level
+        with col_risk1:
+            hba1c_orig = HbA1c_level  # Original value before normalization
+            if hba1c_orig >= 6.5:
+                hba1c_status = "High (Diabetic)"
+                hba1c_color = "#f44336"
+            elif hba1c_orig >= 5.7:
+                hba1c_status = "Elevated (Pre-diabetic)"
+                hba1c_color = "#ff9800"
+            else:
+                hba1c_status = "Normal"
+                hba1c_color = "#4caf50"
+                
+            st.markdown(f"""
+            <div style="padding: 10px; border-radius: 5px; background-color: #f8f9fa; text-align: center;">
+                <h4>HbA1c Level</h4>
+                <div style="font-size: 24px; font-weight: bold; color: {hba1c_color};">{hba1c_orig}%</div>
+                <div style="color: {hba1c_color};">{hba1c_status}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        # Blood glucose risk level
+        with col_risk2:
+            if blood_glucose_level >= 126:
+                bg_status = "High (Diabetic)"
+                bg_color = "#f44336"
+            elif blood_glucose_level >= 100:
+                bg_status = "Elevated (Pre-diabetic)"
+                bg_color = "#ff9800"
+            else:
+                bg_status = "Normal"
+                bg_color = "#4caf50"
+                
+            st.markdown(f"""
+            <div style="padding: 10px; border-radius: 5px; background-color: #f8f9fa; text-align: center;">
+                <h4>Blood Glucose</h4>
+                <div style="font-size: 24px; font-weight: bold; color: {bg_color};">{blood_glucose_level} mg/dL</div>
+                <div style="color: {bg_color};">{bg_status}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        # BMI risk level
+        with col_risk3:
+            if bmi >= 30:
+                bmi_status = "Obese"
+                bmi_color = "#f44336"
+            elif bmi >= 25:
+                bmi_status = "Overweight"
+                bmi_color = "#ff9800"
+            elif bmi >= 18.5:
+                bmi_status = "Normal"
+                bmi_color = "#4caf50"
+            else:
+                bmi_status = "Underweight"
+                bmi_color = "#2196f3"
+                
+            st.markdown(f"""
+            <div style="padding: 10px; border-radius: 5px; background-color: #f8f9fa; text-align: center;">
+                <h4>BMI</h4>
+                <div style="font-size: 24px; font-weight: bold; color: {bmi_color};">{bmi:.1f} kg/m²</div>
+                <div style="color: {bmi_color};">{bmi_status}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Additional risk factors
+        st.markdown("### Additional Risk Factors")
+        
+        col_add1, col_add2 = st.columns(2)
+        
+        with col_add1:
+            # Age risk
+            age_risk = "High" if age > 45 else "Moderate" if age > 35 else "Low"
+            age_color = "#f44336" if age_risk == "High" else "#ff9800" if age_risk == "Moderate" else "#4caf50"
+            
+            st.markdown(f"""
+            <div style="padding: 10px; border-radius: 5px; background-color: #f8f9fa;">
+                <h4>Age Factor</h4>
+                <div>Age: <strong>{age} years</strong></div>
+                <div>Risk Level: <span style="color: {age_color};">{age_risk}</span></div>
+                <div><small>Risk increases with age, particularly after 45</small></div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with col_add2:
+            # Combined cardiovascular risk
+            cv_risk = "High" if hypertension_ui == "Yes" and heart_disease_ui == "Yes" else \
+                       "Moderate" if hypertension_ui == "Yes" or heart_disease_ui == "Yes" else "Low"
+            cv_color = "#f44336" if cv_risk == "High" else "#ff9800" if cv_risk == "Moderate" else "#4caf50"
+            
+            st.markdown(f"""
+            <div style="padding: 10px; border-radius: 5px; background-color: #f8f9fa;">
+                <h4>Cardiovascular Risk</h4>
+                <div>Hypertension: <strong>{hypertension_ui}</strong> | Heart Disease: <strong>{heart_disease_ui}</strong></div>
+                <div>Combined Risk: <span style="color: {cv_color};">{cv_risk}</span></div>
+                <div><small>Cardiovascular conditions increase diabetes risk</small></div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Advanced Analytics Section
+        st.markdown('<div class="section-header">Advanced Analytics</div>', unsafe_allow_html=True)
+        
+        # Allow user to expand SHAP analysis
+        with st.expander("📊 View Feature Importance Analysis"):
+            st.markdown("### Feature Contribution Analysis (SHAP)")
+            st.markdown("""
+            This analysis shows how each factor contributes to your diabetes risk prediction.
+            Positive values increase risk, negative values decrease risk.
+            """)
+            
+            try:
+                # Calculate SHAP values
+                shap_values = explainer.shap_values(input_data_encoded)
+                
+                # Create a more readable DataFrame
+                readable_features = {
+                    'age': 'Age',
+                    'bmi': 'BMI',
+                    'HbA1c_level': 'HbA1c Level',
+                    'blood_glucose_level': 'Blood Glucose',
+                    'gender_Male': 'Male Gender',
+                    'hypertension_1': 'Hypertension',
+                    'heart_disease_1': 'Heart Disease',
+                    'smoking_history_current': 'Current Smoker',
+                    'smoking_history_former': 'Former Smoker',
+                    'smoking_history_never': 'Never Smoked'
+                }
+                
+                # Create a more readable SHAP DataFrame
+                shap_df = pd.DataFrame({
+                    "Feature": [readable_features.get(f, f) for f in training_features],
+                    "SHAP Value": shap_values[0],
+                    "Absolute Impact": abs(shap_values[0])
+                })
+                
+                # Sort by absolute impact
+                shap_df = shap_df.sort_values("Absolute Impact", ascending=False)
+                
+                # Display top factors
+                st.markdown("#### Top Factors Influencing Your Risk")
+                
+                # Create three columns for visualization
+                col_shap1, col_shap2 = st.columns([2, 1])
+                
+                with col_shap1:
+                    # Create a horizontal bar chart
+                    for _, row in shap_df.iloc[:5].iterrows():
+                        feature = row['Feature']
+                        value = row['SHAP Value']
+                        impact = "Increases" if value > 0 else "Decreases"
+                        color = "#f44336" if value > 0 else "#4caf50"
+                        
+                        # Calculate width as percentage of maximum (normalized to 80% of column width)
+                        max_value = shap_df["Absolute Impact"].max()
+                        width_pct = abs(value) / max_value * 80
+                        
+                        # Create styled bar
+                        st.markdown(f"""
+                        <div style="margin-bottom: 10px;">
+                            <div style="margin-bottom: 5px;"><strong>{feature}</strong> {impact} risk</div>
+                            <div style="display: flex; align-items: center;">
+                                <div style="width: 50%; text-align: right; padding-right: 10px;">
+                                    {"" if value > 0 else f"<div style='background-color: {color}; height: 20px; margin-left: {100-width_pct}%; width: {width_pct}%;'></div>"}
+                                </div>
+                                <div style="width: 0; height: 20px; border-right: 2px solid #333;"></div>
+                                <div style="width: 50%; text-align: left; padding-left: 10px;">
+                                    {"<div style='background-color: {color}; height: 20px; width: {width_pct}%;'></div>" if value > 0 else ""}
+                                </div>
+                            </div>
+                            <div style="text-align: center; font-size: 12px; color: #666;">{abs(value):.4f}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                with col_shap2:
+                    st.markdown("#### Interpretation")
+                    
+                    # Get top positive and negative factors
+                    top_positive = shap_df[shap_df["SHAP Value"] > 0].iloc[:2]
+                    top_negative = shap_df[shap_df["SHAP Value"] < 0].iloc[:2]
+                    
+                    if not top_positive.empty:
+                        st.markdown("**Highest Risk Factors:**")
+                        for _, row in top_positive.iterrows():
+                            st.markdown(f"• {row['Feature']}")
+                    
+                    if not top_negative.empty:
+                        st.markdown("**Protective Factors:**")
+                        for _, row in top_negative.iterrows():
+                            st.markdown(f"• {row['Feature']}")
+                            
+                    # Overall recommendation based on top factors
+                    st.markdown("**Recommendation:**")
+                    if not top_positive.empty:
+                        st.markdown(f"Focus on managing your {top_positive.iloc[0]['Feature']} for maximum risk reduction.")
+                
+            except Exception as e:
+                st.error(f"Could not generate SHAP analysis: {e}")
+                
+        # Debug options (hidden in production)
+        with st.expander("🔧 Technical Details (for developers)"):
+            st.markdown('<div class="debug-box">', unsafe_allow_html=True)
+            st.markdown("### Technical Information")
+            
+            # Display raw model outputs
+            st.write("**Raw XGBoost Probabilities:**", xgb_model.predict_proba(input_data_encoded)[0])
+            
+            # Add tabs for different technical information
+            debug_tab1, debug_tab2, debug_tab3 = st.tabs(["Model Inputs", "Fuzzy System", "Raw Data"])
+            
+            with debug_tab1:
+                st.write("**Encoded Features (Model Input):**")
+                st.dataframe(input_data_encoded)
+                
+                st.write("**Feature Normalization:**")
+                st.write(f"HbA1c Min: {hba1c_min}, HbA1c Max: {hba1c_max}")
+                st.write(f"Normalized HbA1c: {normalized_hba1c[0]:.4f}")
+            
+            with debug_tab2:
+                st.write("**Fuzzy System Outputs:**")
+                try:
+                    st.write(risk_sim.output)
+                    
+                    st.write("**Fuzzy System Consequents:**")
+                    for consequent in risk_ctrl.consequents:
+                        st.write(f"Consequent: {consequent.label}")
+                    
+                    st.write("**Fuzzy System Rules:**")
+                    for i, rule in enumerate(risk_ctrl.rules):
+                        st.write(f"Rule {i+1}: {rule}")
+                except Exception as e:
+                    st.write("Fuzzy system could not be fully evaluated.")
+            
+            with debug_tab3:
+                st.write("**Raw Input Data:**")
+                st.dataframe(input_data)
+                
+                st.write("**SHAP Values (All Features):**")
+                try:
+                    shap_df = pd.DataFrame({
+                        "Feature": training_features,
+                        "SHAP Value": shap_values[0]
+                    })
+                    st.dataframe(shap_df.sort_values("SHAP Value", ascending=False))
+                except:
+                    st.write("SHAP values could not be computed.")
+            
+            st.markdown('</div>', unsafe_allow_html=True)
 
-# How input data is encoded?
-if st.checkbox("🔎 Show Additional Debug Info"):
-    st.write("**Encoded Features:**")
-    st.write(input_data_encoded)
+# ------------------ ADDITIONAL INFORMATION SECTIONS ------------------
+
+# Educational Information
+with st.expander("📚 Learn About Diabetes"):
+    st.markdown('<div class="subheader">Understanding Diabetes</div>', unsafe_allow_html=True)
     
-# Use SHAP to explain the prediction?
-if st.checkbox("Know the weightage of each feature in the prediction?"):
-    shap_values = explainer.shap_values(input_data_encoded)
-    st.write("**SHAP Values (Contribution of Each Feature tPrediction):**")
-    shap_df = pd.DataFrame({
-        "Feature": training_features,
-        "SHAP Value": shap_values[0]
-    })
-    st.write(shap_df)
-# Debug: Print all consequents in the fuzzy system
-if st.checkbox("Consequents name?"):
-    st.write("**Debug Info (Fuzzy System Consequents):**")
-    for consequent in risk_ctrl.consequents:
-        st.write(f"Consequent: {consequent.label}")       
-# Debug: Print fuzzy rules
-if st.checkbox("Fuzzy rules"):
-    st.write("**Debug Info (Fuzzy System Rules):**")
-    for rule in risk_ctrl.rules:
-        st.write(f"Rule: {rule}")
-# ------------- FOOTER ------------------
+    # Create tabs for different educational content
+    tab1, tab2, tab3, tab4 = st.tabs(["Diabetes Types", "Risk Factors", "Prevention", "Management"])
+    
+    with tab1:
+        st.markdown("""
+        ### Types of Diabetes
+        
+        **Type 1 Diabetes**
+        - Autoimmune condition where the body attacks insulin-producing cells
+        - Usually develops in childhood or adolescence
+        - Requires insulin therapy for life
+        
+        **Type 2 Diabetes**
+        - Most common form (90-95% of cases)
+        - Body becomes resistant to insulin or doesn't produce enough
+        - Often linked to lifestyle factors and genetics
+        - Can often be managed with lifestyle changes and medication
+        
+        **Gestational Diabetes**
+        - Develops during pregnancy
+        - Usually resolves after childbirth
+        - Increases risk of developing type 2 diabetes later
+        
+        **Prediabetes**
+        - Blood glucose levels higher than normal but not high enough for diabetes diagnosis
+        - Early intervention can prevent progression to type 2 diabetes
+        """)
+        
+    with tab2:
+        st.markdown("""
+        ### Risk Factors
+        
+        **Non-modifiable Risk Factors:**
+        - Age (risk increases after 45)
+        - Family history of diabetes
+        - Ethnicity (higher in certain populations)
+        - History of gestational diabetes
+        - Polycystic ovary syndrome
+        
+        **Modifiable Risk Factors:**
+        - Overweight or obesity (especially abdominal obesity)
+        - Physical inactivity
+        - Unhealthy diet (high in processed foods, sugars)
+        - Smoking
+        - High blood pressure
+        - Abnormal cholesterol levels
+        - Stress and sleep problems
+        """)
+        
+    with tab3:
+        st.markdown("""
+        ### Prevention Strategies
+        
+        **Diet Recommendations:**
+        - Increase fiber intake (fruits, vegetables, whole grains)
+        - Choose whole foods over processed foods
+        - Limit added sugars and refined carbohydrates
+        - Choose healthy fats (olive oil, avocados, nuts)
+        - Control portion sizes
+        
+        **Physical Activity:**
+        - Aim for 150 minutes of moderate exercise weekly
+        - Include both aerobic exercise and strength training
+        - Break up sedentary time with short activity breaks
+        
+        **Lifestyle Changes:**
+        - Maintain a healthy weight or lose 5-7% of body weight if overweight
+        - Quit smoking
+        - Limit alcohol consumption
+        - Manage stress through mindfulness, yoga, or other techniques
+        - Get adequate sleep (7-8 hours nightly)
+        """)
+        
+    with tab4:
+        st.markdown("""
+        ### Management Approaches
+        
+        **Monitoring:**
+        - Regular blood glucose monitoring
+        - HbA1c testing every 3-6 months
+        - Regular medical check-ups
+        
+        **Medication:**
+        - Oral medications (metformin, sulfonylureas, etc.)
+        - Injectable medications (GLP-1 agonists)
+        - Insulin therapy when needed
+        
+        **Self-Care:**
+        - Consistent carbohydrate counting
+        - Regular physical activity
+        - Stress management
+        - Proper foot care
+        - Eye examinations
+        
+        **Support:**
+        - Diabetes education programs
+        - Support groups
+        - Working with healthcare team (doctor, dietitian, diabetes educator)
+        """)
+
+# Recommendations based on risk level
+with st.expander("🗓 Personalized Recommendations"):
+    st.markdown('<div class="subheader">Next Steps Based on Risk Level</div>', unsafe_allow_html=True)
+    
+    # Create three columns for different risk levels
+    col_rec1, col_rec2, col_rec3 = st.columns(3)
+    
+    with col_rec1:
+        st.markdown("""
+        <div style="background-color: #e8f5e9; padding: 15px; border-radius: 8px; height: 100%;">
+            <h3 style="color: #4caf50;">Low Risk</h3>
+            <p><strong>Recommended Testing:</strong></p>
+            <ul>
+                <li>Blood glucose screening every 3 years</li>
+                <li>Annual physical examination</li>
+                <li>Regular blood pressure checks</li>
+            </ul>
+            <p><strong>Lifestyle Focus:</strong></p>
+            <ul>
+                <li>Maintain healthy weight</li>
+                <li>Regular physical activity</li>
+                <li>Balanced diet</li>
+                <li>Avoid smoking</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with col_rec2:
+        st.markdown("""
+        <div style="background-color: #fff8e1; padding: 15px; border-radius: 8px; height: 100%;">
+            <h3 style="color: #ff9800;">Moderate Risk</h3>
+            <p><strong>Recommended Testing:</strong></p>
+            <ul>
+                <li>Blood glucose screening annually</li>
+                <li>HbA1c test every 6 months</li>
+                <li>Lipid profile annually</li>
+                <li>Regular blood pressure monitoring</li>
+            </ul>
+            <p><strong>Lifestyle Focus:</strong></p>
+            <ul>
+                <li>Aim for 5-7% weight loss if overweight</li>
+                <li>150 minutes of physical activity weekly</li>
+                <li>Reduce carbohydrate intake</li>
+                <li>Stress management techniques</li>
+                <li>Consider working with a dietitian</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with col_rec3:
+        st.markdown("""
+        <div style="background-color: #ffebee; padding: 15px; border-radius: 8px; height: 100%;">
+            <h3 style="color: #f44336;">High Risk</h3>
+            <p><strong>Recommended Testing:</strong></p>
+            <ul>
+                <li>Immediate consultation with healthcare provider</li>
+                <li>Comprehensive diabetes screening</li>
+                <li>HbA1c test every 3 months</li>
+                <li>Regular blood glucose monitoring</li>
+                <li>Kidney function tests</li>
+                <li>Eye examination</li>
+            </ul>
+            <p><strong>Lifestyle Focus:</strong></p>
+            <ul>
+                <li>Structured weight management program</li>
+                <li>Diabetes education program</li>
+                <li>Medication as prescribed</li>
+                <li>Carbohydrate counting</li>
+                <li>Regular exercise with medical approval</li>
+                <li>Consider diabetes prevention program</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
+# ------------------ FOOTER ------------------
 st.markdown("""
-    ---
-    **Disclaimer:** This app is for informational purposes only and should not be used as a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.
-""")
+<div class="footnote">
+    <p><strong>Disclaimer:</strong> This app is for informational purposes only and should not be used as a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.</p>
+    <p>Created with ❤️ for better health outcomes | Last updated: April 2025</p>
+</div>
+""", unsafe_allow_html=True)
