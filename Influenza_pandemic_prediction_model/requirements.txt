@@ -1,7 +1,0 @@
-pandas==2.2.2
-numpy==2.0.2
-scikit-learn==1.6.1
-imbalanced-learn==0.13.0
-xgboost==2.1.4
-scikit-fuzzy==0.5.0
-networkx==3.3
