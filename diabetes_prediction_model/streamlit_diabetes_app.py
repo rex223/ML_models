@@ -150,7 +150,7 @@ with healthcare professionals.
 
 # Create a sidebar for information
 with st.sidebar:
-    st.image("https://img.freepik.com/free-vector/diabetes-awareness-month-abstract-concept-illustration_335657-3831.jpg", use_column_width=True)
+    st.image("https://img.freepik.com/free-vector/diabetes-awareness-month-abstract-concept-illustration_335657-3831.jpg", use_container_width=True)
     st.markdown('<div class="subheader">About This Tool</div>', unsafe_allow_html=True)
     st.markdown("""
     This diabetes risk assessment tool uses machine learning to predict:
