@@ -1,6 +1,3 @@
-I'll enhance the styling of your Streamlit diabetes prediction app to make it look more polished and medically appropriate. Let me create a styled version of your code:
-
-```python
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -8,10 +5,8 @@ import pickle
 import os
 from xgboost import XGBClassifier
 from sklearn.preprocessing import StandardScaler
-# For fuzzy logic:
 import skfuzzy as fuzz
 import skfuzzy.control as ctrl
-# For SHAP:
 import shap
 
 # Set page configuration
