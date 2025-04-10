@@ -10,16 +10,9 @@ import skfuzzy.control as ctrl
 import shap
 
 # Set page configuration
-st.set_page_config(
-    page_title="Diabetes Risk Assessment",
-    page_icon="🩺",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# Custom CSS styling
 st.markdown("""
 <style>
+    /* Main header styling */
     .main-header {
         font-family: 'Helvetica Neue', sans-serif;
         font-size: 36px;
@@ -30,67 +23,160 @@ st.markdown("""
         padding: 20px;
         border-bottom: 2px solid #3498db;
     }
+    
+    /* Dark mode for main header */
+    [data-theme="dark"] .main-header {
+        color: #ecf0f1;
+        border-bottom: 2px solid #3498db;
+    }
+    
     .subheader {
         font-size: 24px;
         font-weight: 500;
         color: #34495e;
         margin: 20px 0 10px 0;
     }
+    
+    /* Dark mode for subheader */
+    [data-theme="dark"] .subheader {
+        color: #dcdde1;
+    }
+    
+    /* Base styling for result boxes */
     .result-box {
         padding: 20px;
         border-radius: 10px;
         margin: 20px 0;
     }
+    
+    /* Light mode result boxes */
     .diabetic-box {
         background-color: #ffebee;
         border-left: 5px solid #f44336;
+        color: #212121;
     }
+    
     .prediabetic-box {
         background-color: #fff8e1;
         border-left: 5px solid #ffc107;
+        color: #212121;
     }
+    
     .healthy-box {
         background-color: #e8f5e9;
         border-left: 5px solid #4caf50;
+        color: #212121;
     }
+    
+    /* Dark mode result boxes */
+    [data-theme="dark"] .diabetic-box {
+        background-color: rgba(244, 67, 54, 0.2);
+        border-left: 5px solid #f44336;
+        color: #f5f5f5;
+    }
+    
+    [data-theme="dark"] .prediabetic-box {
+        background-color: rgba(255, 193, 7, 0.2);
+        border-left: 5px solid #ffc107;
+        color: #f5f5f5;
+    }
+    
+    [data-theme="dark"] .healthy-box {
+        background-color: rgba(76, 175, 80, 0.2);
+        border-left: 5px solid #4caf50;
+        color: #f5f5f5;
+    }
+    
     .metric-label {
         font-weight: 600;
         color: #34495e;
     }
+    
+    /* Dark mode metric label */
+    [data-theme="dark"] .metric-label {
+        color: #dcdde1;
+    }
+    
     .info-box {
         background-color: #e3f2fd;
         padding: 15px;
         border-radius: 8px;
         margin: 10px 0;
         border-left: 5px solid #2196f3;
+        color: #212121;
     }
+    
+    /* Dark mode info box */
+    [data-theme="dark"] .info-box {
+        background-color: rgba(33, 150, 243, 0.2);
+        border-left: 5px solid #2196f3;
+        color: #f5f5f5;
+    }
+    
+    /* Link styling for both modes */
     .stApp a {
         color: #3498db;
     }
+    
     .stApp a:hover {
         color: #2c3e50;
     }
+    
+    [data-theme="dark"] .stApp a {
+        color: #3498db;
+    }
+    
+    [data-theme="dark"] .stApp a:hover {
+        color: #8bc4ea;
+    }
+    
     .input-section {
         background-color: #f8f9fa;
         padding: 20px;
         border-radius: 10px;
         margin-bottom: 20px;
+        color: #212121;
     }
+    
+    /* Dark mode input section */
+    [data-theme="dark"] .input-section {
+        background-color: rgba(255, 255, 255, 0.05);
+        color: #f5f5f5;
+    }
+    
     .footnote {
         font-size: 12px;
         color: #7f8c8d;
         text-align: center;
         margin-top: 50px;
     }
+    
+    /* Dark mode footnote */
+    [data-theme="dark"] .footnote {
+        color: #bdc3c7;
+    }
+    
     .highlight {
         font-weight: bold;
         color: #3498db;
     }
+    
+    /* Dark mode highlight */
+    [data-theme="dark"] .highlight {
+        color: #3498db;
+    }
+    
     /* Styled radio buttons and selectors */
     div[data-testid="stSelectbox"] label {
         font-weight: 500;
         color: #2c3e50;
     }
+    
+    /* Dark mode for select boxes */
+    [data-theme="dark"] div[data-testid="stSelectbox"] label {
+        color: #ecf0f1;
+    }
+    
     /* Custom header for sections */
     .section-header {
         background-color: #3498db;
@@ -100,6 +186,12 @@ st.markdown("""
         font-weight: 500;
         margin: 20px 0 10px 0;
     }
+    
+    /* Dark mode section header */
+    [data-theme="dark"] .section-header {
+        background-color: #2980b9;
+    }
+    
     /* Debug sections */
     .debug-box {
         background-color: #f0f0f0;
@@ -107,7 +199,16 @@ st.markdown("""
         border-radius: 8px;
         border: 1px dashed #95a5a6;
         margin: 10px 0;
+        color: #212121;
     }
+    
+    /* Dark mode debug box */
+    [data-theme="dark"] .debug-box {
+        background-color: rgba(240, 240, 240, 0.1);
+        border: 1px dashed #bdc3c7;
+        color: #f5f5f5;
+    }
+    
     /* Prediction button */
     .stButton button {
         background-color: #2c3e50;
@@ -118,15 +219,18 @@ st.markdown("""
         border: none;
         transition: all 0.3s;
     }
+    
     .stButton button:hover {
         background-color: #3498db;
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
+    
     /* Loading spinner */
     div[data-testid="stSpinner"] {
         margin: 20px 0;
     }
+    
     /* Progress bars */
     div[data-testid="stProgressBar"] {
         margin: 10px 0;
