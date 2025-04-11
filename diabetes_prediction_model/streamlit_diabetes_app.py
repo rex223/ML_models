@@ -12,320 +12,335 @@ import shap
 # Set page configuration
 st.markdown("""
 <style>
-    /* Improved heading visibility in dark mode */
-    [data-theme="dark"] h1, 
-    [data-theme="dark"] h2, 
-    [data-theme="dark"] h3, 
-    [data-theme="dark"] h4 {
-        color: #ffffff !important;
+    /* Main header styling */
+    .main-header {
+        font-family: 'Helvetica Neue', sans-serif;
+        font-size: 36px;
         font-weight: 600;
-        text-shadow: 0px 1px 2px rgba(0,0,0,0.2);
-    }
-    
-    /* Main title styling - extra emphasis */
-    [data-theme="dark"] .main-header,
-    [data-theme="dark"] h1:contains("Diabetes Risk Assessment") {
-        color: #3498db !important;
-        font-size: 2.2rem;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        text-shadow: 0px 2px 3px rgba(0,0,0,0.3);
-    }
-    
-    /* Section headings like "Key Risk Factors" and "Additional Risk Factors" */
-    [data-theme="dark"] h2, 
-    [data-theme="dark"] h2.section-title,
-    [data-theme="dark"] .stMarkdown h2 {
-        color: #ffffff !important;
-        font-size: 1.8rem;
-        margin-top: 25px;
-        margin-bottom: 15px;
-        font-weight: 600;
-        border-bottom: 1px solid rgba(255,255,255,0.2);
-        padding-bottom: 5px;
-    }
-
-    /* "Next Steps Based on Risk Level" heading */
-    [data-theme="dark"] h3:contains("Next Steps Based on Risk Level"),
-    [data-theme="dark"] .stMarkdown h3:contains("Next Steps") {
-        color: #3498db !important;
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-top: 20px;
-        margin-bottom: 15px;
-    }
-    
-    /* Risk Cards - Base styling for all cards */
-    .risk-card {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        text-align: center;
         padding: 20px;
-        border-radius: 8px;
-        margin: 10px 0;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        height: 100%;
+        border-bottom: 2px solid #3498db;
     }
     
-    /* High risk - red style */
-    .high-risk-card {
+    /* Dark mode for main header */
+    [data-theme="dark"] .main-header {
+        color: #ecf0f1;
+        border-bottom: 2px solid #3498db;
+    }
+    
+    .subheader {
+        font-size: 24px;
+        font-weight: 500;
+        color: #34495e;
+        margin: 20px 0 10px 0;
+    }
+    
+    /* Dark mode for subheader */
+    [data-theme="dark"] .subheader {
+        color: #dcdde1;
+    }
+    
+    /* Base styling for result boxes */
+    .result-box {
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+    }
+    
+    /* Light mode result boxes */
+    .diabetic-box {
         background-color: #ffebee;
-        border-left: 4px solid #f44336;
+        border-left: 5px solid #f44336;
+        color: #212121;
     }
     
-    [data-theme="dark"] .high-risk-card {
-        background-color: rgba(244, 67, 54, 0.15);
-        border-left: 4px solid #f44336;
-    }
-    
-    /* Moderate risk - orange/yellow style */
-    .moderate-risk-card {
+    .prediabetic-box {
         background-color: #fff8e1;
-        border-left: 4px solid #ffc107;
+        border-left: 5px solid #ffc107;
+        color: #212121;
     }
     
-    [data-theme="dark"] .moderate-risk-card {
-        background-color: rgba(255, 193, 7, 0.15);
-        border-left: 4px solid #ffc107;
-    }
-    
-    /* Low risk - green style */
-    .low-risk-card {
+    .healthy-box {
         background-color: #e8f5e9;
-        border-left: 4px solid #4caf50;
+        border-left: 5px solid #4caf50;
+        color: #212121;
     }
     
-    [data-theme="dark"] .low-risk-card {
-        background-color: rgba(76, 175, 80, 0.15);
-        border-left: 4px solid #4caf50;
+    /* Dark mode result boxes */
+    [data-theme="dark"] .diabetic-box {
+        background-color: rgba(244, 67, 54, 0.2);
+        border-left: 5px solid #f44336;
+        color: #f5f5f5;
     }
     
-    /* Risk level heading within cards */
-    .risk-level {
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-bottom: 15px;
+    [data-theme="dark"] .prediabetic-box {
+        background-color: rgba(255, 193, 7, 0.2);
+        border-left: 5px solid #ffc107;
+        color: #f5f5f5;
     }
     
-    .high-risk .risk-level {
-        color: #f44336;
-    }
-    
-    .moderate-risk .risk-level {
-        color: #ffc107;
-    }
-    
-    .low-risk .risk-level {
-        color: #4caf50;
-    }
-    
-    [data-theme="dark"] .high-risk .risk-level {
-        color: #ff5252;
-    }
-    
-    [data-theme="dark"] .moderate-risk .risk-level {
-        color: #ffeb3b;
-    }
-    
-    [data-theme="dark"] .low-risk .risk-level {
-        color: #69f0ae;
-    }
-    
-    /* Ensure all text in cards is visible in dark mode */
-    [data-theme="dark"] .stMarkdown p,
-    [data-theme="dark"] .stMarkdown li,
-    [data-theme="dark"] .stMarkdown ul,
-    [data-theme="dark"] .risk-card p,
-    [data-theme="dark"] .risk-card li {
-        color: rgba(255, 255, 255, 0.87) !important;
-    }
-    
-    /* For metric values, ensure high visibility */
-    .metric-value {
-        font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 5px;
+    [data-theme="dark"] .healthy-box {
+        background-color: rgba(76, 175, 80, 0.2);
+        border-left: 5px solid #4caf50;
+        color: #f5f5f5;
     }
     
     .metric-label {
-        font-size: 1rem;
-        color: rgba(0, 0, 0, 0.6);
-    }
-    
-    [data-theme="dark"] .metric-value {
-        color: #ffffff !important;
-    }
-    
-    [data-theme="dark"] .metric-label {
-        color: rgba(255, 255, 255, 0.7) !important;
-    }
-    
-    /* Special styling for the risk indicators - HbA1c, Blood Glucose, BMI */
-    .metric-high {
-        color: #f44336;
-    }
-    
-    .metric-moderate {
-        color: #ff9800;
-    }
-    
-    .metric-normal {
-        color: #4caf50;
-    }
-    
-    [data-theme="dark"] .metric-high {
-        color: #ff5252 !important;
-    }
-    
-    [data-theme="dark"] .metric-moderate {
-        color: #ffeb3b !important;
-    }
-    
-    [data-theme="dark"] .metric-normal {
-        color: #69f0ae !important;
-    }
-    
-    /* Fix cards background in dark mode */
-    [data-theme="dark"] .element-container .stMarkdown {
-        background-color: rgba(255, 255, 255, 0.05);
-        border-radius: 8px;
-        padding: 15px;
-        margin-bottom: 10px;
-    }
-    
-    /* Section headings for recommendations */
-    .section-subheading {
-        font-size: 1.2rem;
         font-weight: 600;
-        margin-top: 15px;
-        margin-bottom: 10px;
+        color: #34495e;
+    }
+    
+    /* Dark mode metric label */
+    [data-theme="dark"] .metric-label {
+        color: #dcdde1;
+    }
+    
+    .info-box {
+        background-color: #e3f2fd;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 10px 0;
+        border-left: 5px solid #2196f3;
+        color: #212121;
+    }
+    
+    /* Dark mode info box */
+    [data-theme="dark"] .info-box {
+        background-color: rgba(33, 150, 243, 0.2);
+        border-left: 5px solid #2196f3;
+        color: #f5f5f5;
+    }
+    
+    /* Link styling for both modes */
+    .stApp a {
+        color: #3498db;
+    }
+    
+    .stApp a:hover {
         color: #2c3e50;
     }
     
-    [data-theme="dark"] .section-subheading {
-        color: rgba(255, 255, 255, 0.9) !important;
+    [data-theme="dark"] .stApp a {
+        color: #3498db;
     }
     
-    /* Fix for bullet points and list items */
-    [data-theme="dark"] ul li {
-        color: rgba(255, 255, 255, 0.87) !important;
+    [data-theme="dark"] .stApp a:hover {
+        color: #8bc4ea;
     }
     
-    /* Button styling - "Advanced Analytics" */
-    .stButton button {
+    .input-section {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        color: #212121;
+    }
+    
+    /* Dark mode input section */
+    [data-theme="dark"] .input-section {
+        background-color: rgba(255, 255, 255, 0.05);
+        color: #f5f5f5;
+    }
+    
+    .footnote {
+        font-size: 12px;
+        color: #7f8c8d;
+        text-align: center;
+        margin-top: 50px;
+    }
+    
+    /* Dark mode footnote */
+    [data-theme="dark"] .footnote {
+        color: #bdc3c7;
+    }
+    
+    .highlight {
+        font-weight: bold;
+        color: #3498db;
+    }
+    
+    /* Dark mode highlight */
+    [data-theme="dark"] .highlight {
+        color: #3498db;
+    }
+    
+    /* Styled radio buttons and selectors */
+    div[data-testid="stSelectbox"] label {
+        font-weight: 500;
+        color: #2c3e50;
+    }
+    
+    /* Dark mode for select boxes */
+    [data-theme="dark"] div[data-testid="stSelectbox"] label {
+        color: #ecf0f1;
+    }
+    
+    /* Custom header for sections */
+    .section-header {
         background-color: #3498db;
         color: white;
-        border: none;
-        border-radius: 4px;
-        padding: 10px 20px;
+        padding: 10px 15px;
+        border-radius: 5px;
         font-weight: 500;
+        margin: 20px 0 10px 0;
+    }
+    
+    /* Dark mode section header */
+    [data-theme="dark"] .section-header {
+        background-color: #2980b9;
+    }
+    
+    /* Debug sections */
+    .debug-box {
+        background-color: #f0f0f0;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px dashed #95a5a6;
+        margin: 10px 0;
+        color: #212121;
+    }
+    
+    /* Dark mode debug box */
+    [data-theme="dark"] .debug-box {
+        background-color: rgba(240, 240, 240, 0.1);
+        border: 1px dashed #bdc3c7;
+        color: #f5f5f5;
+    }
+    
+    /* Prediction button */
+    .stButton button {
+        background-color: #2c3e50;
+        color: white;
+        font-weight: 500;
+        padding: 10px 20px;
+        border-radius: 50px;
+        border: none;
         transition: all 0.3s;
     }
     
     .stButton button:hover {
-        background-color: #2980b9;
+        background-color: #3498db;
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
     
-    [data-theme="dark"] .stButton button {
-        background-color: #2980b9;
-        color: white;
+    /* Loading spinner */
+    div[data-testid="stSpinner"] {
+        margin: 20px 0;
     }
     
-    [data-theme="dark"] .stButton button:hover {
-        background-color: #3498db;
+    /* Progress bars */
+    div[data-testid="stProgressBar"] {
+        margin: 10px 0;
     }
     
-    /* Specific fix for the "Additional Risk Factors" cards */
-    [data-theme="dark"] div:contains("Additional Risk Factors") + div .stMarkdown {
-        color: white !important;
+    /* ===== ENHANCED DARK MODE FIXES ===== */
+    
+    /* Main title and description fixes for dark mode */
+    [data-theme="dark"] .stApp h1,
+    [data-theme="dark"] .stApp h2,
+    [data-theme="dark"] .stApp h3 {
+        color: #ecf0f1 !important;
+        font-weight: 600;
     }
     
-    /* Special styling for Moderate and Low text in the additional risk factors section */
-    [data-theme="dark"] .stMarkdown:contains("Moderate") {
-        color: #ffeb3b !important;
+    [data-theme="dark"] .stApp p,
+    [data-theme="dark"] .stApp li,
+    [data-theme="dark"] .stApp label,
+    [data-theme="dark"] .stApp div {
+        color: #ecf0f1;
     }
     
-    [data-theme="dark"] .stMarkdown:contains("Low") {
-        color: #69f0ae !important;
+    /* White boxes in dark mode */
+    [data-theme="dark"] .stTextInput input,
+    [data-theme="dark"] .stNumberInput input,
+    [data-theme="dark"] .stTextArea textarea {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #ecf0f1;
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
     
-    /* Ensure metric values (6.5%, 126 mg/dL, etc.) are visible */
-    [data-theme="dark"] div:contains("6.5%") {
-        color: #ff5252 !important;
+    /* Fix for sidebar text in dark mode */
+    [data-theme="dark"] .stSidebar .sidebar-content p,
+    [data-theme="dark"] .stSidebar .sidebar-content h1,
+    [data-theme="dark"] .stSidebar .sidebar-content h2,
+    [data-theme="dark"] .stSidebar .sidebar-content h3,
+    [data-theme="dark"] .stSidebar .sidebar-content div {
+        color: #ecf0f1 !important;
+    }
+    
+    /* White container backgrounds in dark mode */
+    [data-theme="dark"] .stTabs div[data-baseweb="tab-panel"] {
+        background-color: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+    }
+    
+    /* Ensure expanders and other containers are visible */
+    [data-theme="dark"] .stExpander {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Ensure form labels are visible */
+    [data-theme="dark"] div[data-testid="stForm"] label,
+    [data-theme="dark"] div[data-testid="stVerticalBlock"] label {
+        color: #ecf0f1 !important;
+    }
+    
+    /* Better visibility for radio buttons and checkboxes */
+    [data-theme="dark"] div[data-testid="stRadio"] label,
+    [data-theme="dark"] div[data-testid="stCheckbox"] label {
+        color: #ecf0f1 !important;
+    }
+    
+    /* Header section specifically for the Diabetes app */
+    [data-theme="dark"] h1:contains("Diabetes Risk Assessment") {
+        color: #3498db !important; 
         font-weight: 700;
-        font-size: 1.8rem;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
     
-    [data-theme="dark"] div:contains("126 mg/dL") {
-        color: #ff5252 !important;
-        font-weight: 700;
-        font-size: 1.8rem;
+    /* Blue info boxes with better visibility */
+    [data-theme="dark"] div[data-testid="stAlert"] {
+        background-color: rgba(33, 150, 243, 0.15);
+        color: #ecf0f1;
+        border-left-color: #3498db;
     }
     
-    [data-theme="dark"] div:contains("25.0 kg/m²") {
-        color: #ffeb3b !important;
-        font-weight: 700;
-        font-size: 1.8rem;
+    /* Special styling for white box containers in your screenshot */
+    [data-theme="dark"] .element-container .stMarkdown div.stMarkdown {
+        background-color: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
-    /* Fix subtext under metrics */
-    [data-theme="dark"] div:contains("High (Diabetic)") {
-        color: #ff5252 !important;
+    /* Make all default text in the app visible in dark mode */
+    [data-theme="dark"] .stApp {
+        color: #ecf0f1;
     }
     
-    [data-theme="dark"] div:contains("Overweight") {
-        color: #ffeb3b !important;
+    /* Better contrast for tabs in dark mode */
+    [data-theme="dark"] button[role="tab"] {
+        background-color: rgba(52, 152, 219, 0.1);
+        color: #ecf0f1 !important;
     }
     
-    /* Force all text in recommendation cards to be visible */
-    [data-theme="dark"] .stMarkdown div {
-        color: rgba(255, 255, 255, 0.87) !important;
+    [data-theme="dark"] button[role="tab"][aria-selected="true"] {
+        background-color: rgba(52, 152, 219, 0.3);
+        border-bottom: 2px solid #3498db;
+    }
+
+    /* Styling for the HbA1c Level and other clinical parameters */
+    [data-theme="dark"] div:has(> div > .stMarkdown:contains("HbA1c Level")) .stMarkdown {
+        color: #ecf0f1 !important;
     }
     
-    /* Special styling for the recommendation categories */
-    [data-theme="dark"] div:contains("Recommended Testing") {
-        color: white !important;
-        font-weight: 600;
-        font-size: 1.2rem;
-        margin-bottom: 10px;
-        border-bottom: 1px solid rgba(255,255,255,0.2);
-        padding-bottom: 5px;
-    }
-    
-    [data-theme="dark"] div:contains("Lifestyle Focus") {
-        color: white !important;
-        font-weight: 600;
-        font-size: 1.2rem;
-        margin-top: 15px;
-        margin-bottom: 10px;
-        border-bottom: 1px solid rgba(255,255,255,0.2);
-        padding-bottom: 5px;
-    }
-    
-    /* Fix card titles */
-    [data-theme="dark"] div.css-1kyxreq .stMarkdown h3 {
-        color: white !important;
-    }
-    
-    /* Target specific text for risk categories */
-    [data-theme="dark"] div:contains("Low Risk") h3,
-    [data-theme="dark"] .stMarkdown h3:contains("Low Risk") {
-        color: #69f0ae !important;
-        font-size: 1.5rem;
-        font-weight: 600;
-    }
-    
-    [data-theme="dark"] div:contains("Moderate Risk") h3,
-    [data-theme="dark"] .stMarkdown h3:contains("Moderate Risk") {
-        color: #ffeb3b !important;
-        font-size: 1.5rem;
-        font-weight: 600;
-    }
-    
-    [data-theme="dark"] div:contains("High Risk") h3,
-    [data-theme="dark"] .stMarkdown h3:contains("High Risk") {
-        color: #ff5252 !important;
-        font-size: 1.5rem;
-        font-weight: 600;
+    /* Styling for icons and their text */
+    [data-theme="dark"] .css-1kyxreq span.e16nr0p33,
+    [data-theme="dark"] .css-1kyxreq span.e16nr0p30 {
+        color: #ecf0f1 !important;
     }
 </style>
 """, unsafe_allow_html=True)
