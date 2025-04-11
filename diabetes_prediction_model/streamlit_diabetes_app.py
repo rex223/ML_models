@@ -235,6 +235,113 @@ st.markdown("""
     div[data-testid="stProgressBar"] {
         margin: 10px 0;
     }
+    
+    /* ===== ENHANCED DARK MODE FIXES ===== */
+    
+    /* Main title and description fixes for dark mode */
+    [data-theme="dark"] .stApp h1,
+    [data-theme="dark"] .stApp h2,
+    [data-theme="dark"] .stApp h3 {
+        color: #ecf0f1 !important;
+        font-weight: 600;
+    }
+    
+    [data-theme="dark"] .stApp p,
+    [data-theme="dark"] .stApp li,
+    [data-theme="dark"] .stApp label,
+    [data-theme="dark"] .stApp div {
+        color: #ecf0f1;
+    }
+    
+    /* White boxes in dark mode */
+    [data-theme="dark"] .stTextInput input,
+    [data-theme="dark"] .stNumberInput input,
+    [data-theme="dark"] .stTextArea textarea {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #ecf0f1;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    /* Fix for sidebar text in dark mode */
+    [data-theme="dark"] .stSidebar .sidebar-content p,
+    [data-theme="dark"] .stSidebar .sidebar-content h1,
+    [data-theme="dark"] .stSidebar .sidebar-content h2,
+    [data-theme="dark"] .stSidebar .sidebar-content h3,
+    [data-theme="dark"] .stSidebar .sidebar-content div {
+        color: #ecf0f1 !important;
+    }
+    
+    /* White container backgrounds in dark mode */
+    [data-theme="dark"] .stTabs div[data-baseweb="tab-panel"] {
+        background-color: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+    }
+    
+    /* Ensure expanders and other containers are visible */
+    [data-theme="dark"] .stExpander {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Ensure form labels are visible */
+    [data-theme="dark"] div[data-testid="stForm"] label,
+    [data-theme="dark"] div[data-testid="stVerticalBlock"] label {
+        color: #ecf0f1 !important;
+    }
+    
+    /* Better visibility for radio buttons and checkboxes */
+    [data-theme="dark"] div[data-testid="stRadio"] label,
+    [data-theme="dark"] div[data-testid="stCheckbox"] label {
+        color: #ecf0f1 !important;
+    }
+    
+    /* Header section specifically for the Diabetes app */
+    [data-theme="dark"] h1:contains("Diabetes Risk Assessment") {
+        color: #3498db !important; 
+        font-weight: 700;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    /* Blue info boxes with better visibility */
+    [data-theme="dark"] div[data-testid="stAlert"] {
+        background-color: rgba(33, 150, 243, 0.15);
+        color: #ecf0f1;
+        border-left-color: #3498db;
+    }
+    
+    /* Special styling for white box containers in your screenshot */
+    [data-theme="dark"] .element-container .stMarkdown div.stMarkdown {
+        background-color: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Make all default text in the app visible in dark mode */
+    [data-theme="dark"] .stApp {
+        color: #ecf0f1;
+    }
+    
+    /* Better contrast for tabs in dark mode */
+    [data-theme="dark"] button[role="tab"] {
+        background-color: rgba(52, 152, 219, 0.1);
+        color: #ecf0f1 !important;
+    }
+    
+    [data-theme="dark"] button[role="tab"][aria-selected="true"] {
+        background-color: rgba(52, 152, 219, 0.3);
+        border-bottom: 2px solid #3498db;
+    }
+
+    /* Styling for the HbA1c Level and other clinical parameters */
+    [data-theme="dark"] div:has(> div > .stMarkdown:contains("HbA1c Level")) .stMarkdown {
+        color: #ecf0f1 !important;
+    }
+    
+    /* Styling for icons and their text */
+    [data-theme="dark"] .css-1kyxreq span.e16nr0p33,
+    [data-theme="dark"] .css-1kyxreq span.e16nr0p30 {
+        color: #ecf0f1 !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
