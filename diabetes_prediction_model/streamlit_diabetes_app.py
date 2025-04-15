@@ -26,7 +26,7 @@ st.markdown("""
     
     /* Dark mode for main header */
     [data-theme="dark"] .main-header {
-        color: #ecf0f1;
+        color: blue;
         border-bottom: 2px solid #3498db;
     }
     
