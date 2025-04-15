@@ -17,7 +17,7 @@ st.markdown("""
         font-family: 'Helvetica Neue', sans-serif;
         font-size: 36px;
         font-weight: 600;
-        color: #2c3e50;
+        color: blue;
         margin-bottom: 20px;
         text-align: center;
         padding: 20px;
@@ -647,7 +647,7 @@ if st.button("🔍 Run Clinical Assessment", help="Click to analyze your diabete
             </div>
             """, unsafe_allow_html=True)
             
-        elif xgb_prob[0] >= 0.05:  # Pre-diabetic threshold
+        elif xgb_prob[0] >= 0.01:  # Pre-diabetic threshold
             st.markdown(f"""
             <div class="result-box prediabetic-box">
                 <h3>ℹ️ Assessment Result: <span style="color: #ff9800;">MODERATE RISK (PRE-DIABETIC)</span></h3>
@@ -720,7 +720,7 @@ if st.button("🔍 Run Clinical Assessment", help="Click to analyze your diabete
             if blood_glucose_level >= 126:
                 bg_status = "High (Diabetic)"
                 bg_color = "#f44336"
-            elif blood_glucose_level >= 100:
+            elif blood_glucose_level >= 101:
                 bg_status = "Elevated (Pre-diabetic)"
                 bg_color = "#ff9800"
             else:
@@ -897,7 +897,7 @@ if st.button("🔍 Run Clinical Assessment", help="Click to analyze your diabete
             st.markdown("### Technical Information")
             
             # Display raw model outputs
-            st.write("**Raw XGBoost Probabilities:**", xgb_model.predict_proba(input_data_encoded)[0])
+            # st.write("**Raw XGBoost Probabilities:**", xgb_model.predict_proba(input_data_encoded)[0])
             
             # Add tabs for different technical information
             debug_tab1, debug_tab2, debug_tab3 = st.tabs(["Model Inputs", "Fuzzy System", "Raw Data"])
