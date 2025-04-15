@@ -342,6 +342,62 @@ st.markdown("""
     [data-theme="dark"] .css-1kyxreq span.e16nr0p30 {
         color: #ecf0f1 !important;
     }
+    
+    /* ===== FIXES FOR BLUE HIGHLIGHTED TEXT ===== */
+    
+    /* Fix for blue highlighted headers and values with better contrast */
+    /* These are the blue elements visible in your screenshot */
+    
+    /* Headers like HbA1c Level, Blood Glucose, BMI, etc. */
+    .stApp [style*="background-color: rgb("] {
+        background-color: #1a5fb4 !important; /* Darker blue for better contrast */
+        color: white !important;
+        font-weight: 600 !important;
+        padding: 6px 10px !important;
+        border-radius: 4px !important;
+    }
+    
+    /* Make sure text in blue sections is visible in both light and dark modes */
+    [style*="background-color: rgb(65, 105, 225)"],
+    [style*="background-color: rgb(30, 144, 255)"],
+    [style*="background-color: rgb(100, 149, 237)"] {
+        background-color: #1a5fb4 !important;
+        color: white !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Fix specifically for the status indicators (like High/Diabetic, etc.) */
+    [style*="background-color:"] {
+        color: white !important;
+        font-weight: 500 !important;
+    }
+    
+    /* Additional contrast fix for any blue backgrounds with text */
+    .stApp [style*="color: white"] {
+        text-shadow: 0 1px 1px rgba(0,0,0,0.5) !important; /* Add shadow for legibility */
+    }
+    
+    /* Age Factor, Cardiovascular Risk, etc. headers */
+    .stApp div:has(> div > .stMarkdown:contains("Age Factor")),
+    .stApp div:has(> div > .stMarkdown:contains("Cardiovascular Risk")) {
+        color: white !important;
+    }
+    
+    /* Specific fix for "No" values in Hypertension and Heart Disease */
+    .stApp div:has(> div > .stMarkdown:contains("No")) div {
+        color: white !important;
+        font-weight: 500 !important;
+    }
+    
+    /* Risk level labels */
+    .stApp div:has(> div > .stMarkdown:contains("Risk Level")) {
+        color: white !important;
+    }
+    
+    /* Fix for "Combined Risk: Low" and similar status indicators */
+    div:has(> div > .stMarkdown:contains("Combined Risk")) {
+        color: white !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
