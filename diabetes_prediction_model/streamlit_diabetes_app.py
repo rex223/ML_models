@@ -17,7 +17,7 @@ st.markdown("""
         font-family: 'Helvetica Neue', sans-serif;
         font-size: 36px;
         font-weight: 600;
-        color: blue;
+        color: orange;
         margin-bottom: 20px;
         text-align: center;
         padding: 20px;
